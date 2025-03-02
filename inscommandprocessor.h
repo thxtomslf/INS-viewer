@@ -1,0 +1,60 @@
+#ifndef INSCOMMANDPROCESSOR_H
+#define INSCOMMANDPROCESSOR_H
+
+#include <QObject>
+#include <QSerialPort>
+#include <QByteArray>
+#include <vector>
+#include <functional>
+#include <qtimer.h>
+
+#include "dynamiccircularbuffer.h"
+#include "serialreader.h"
+
+class InsCommandProcessor : public SerialReaderWriter
+{
+    Q_OBJECT
+
+public:
+    enum ResponseType {
+        Accepted = 0x01,
+        Rejected = 0x02,
+        CRC_FAIL = 0x03,
+        BAD_RESPONSE = 0x04
+    };
+
+    explicit InsCommandProcessor(QObject *parent = nullptr);
+    ~InsCommandProcessor();
+
+    void readData(const std::function<void(const QByteArray&)> &callback);
+    void interrupt();
+    void reconfigureUart(QSerialPort::BaudRate baudRate, QSerialPort::DataBits dataBits, QSerialPort::Parity parity, QSerialPort::FlowControl flowControl, QSerialPort::StopBits stopBits);
+
+
+public:
+    int getFrequency();
+
+private slots:
+    void handleReadyRead();
+    void updateCounter();
+
+private:
+    QString responseTypeToString(ResponseType type) const;
+    bool validateCRC(const QByteArray &message, uint8_t crc) const;
+
+    const int BUFFER_SIZE = 2048 * 10;
+    std::function<void(const QByteArray&)> responseCallback_;
+    DynamicCircularBuffer buffer_;
+    int tail;
+    int head;
+
+    bool addByteToBuffer(uint8_t byte);
+    QByteArray getCompleteMessage();
+
+    int messagesCount = 0;
+    int frequency = 0;
+    QTimer timer;
+};
+
+
+#endif // INSCOMMANDPROCESSOR_H

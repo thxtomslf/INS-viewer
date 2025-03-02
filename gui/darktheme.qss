@@ -1,0 +1,160 @@
+QWidget {
+    background-color: #2b2b2b; /* Background color for the application */
+    color: #d3d3d3; /* Text color */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* Font family */
+    font-size: 12pt; /* Font size */
+}
+
+/* Label styles */
+QLabel {
+    color: #bbbbbb; /* Text color */
+    font-weight: bold; /* Bold text */
+}
+
+/* MenuBar styles */
+
+/* MenuBar Минимальная высота для свёрнутого состояния */
+QMenuBar {
+    background-color: #2b2b2b; /* Menu bar background color */
+    border-bottom: 1px solid #555555; /* Bottom border */
+}
+
+QMenuBar::item {
+    background-color: transparent; /* Transparent background */
+    border: 1px solid #555555; /* Border around menu items */
+    padding: 5px 10px; /* Padding for menu items */
+    margin: 1px; /* Margin to separate items */
+    border-radius: 4px; /* Rounded corners */
+    color: #d3d3d3; /* Text color */
+}
+
+QMenuBar::item:selected {
+    background-color: #4d4d4d; /* Highlight color on hover */
+    color: #d3d3d3; /* Text color when highlighted */
+}
+
+
+/* Menu styles */
+QMenu {
+    background-color: #3c3c3c; /* Background color */
+    border: 1px solid #555555; /* Border */
+}
+
+QMenu::item {
+    background-color: transparent; /* Transparent background */
+    padding: 5px 20px; /* Padding */
+    color: #d3d3d3; /* Text color */
+}
+
+QMenu::item:selected {
+    background-color: #565656; /* Background color for selected item */
+    color: #ffffff; /* Text color for selected item */
+}
+
+/* ComboBox and Button styles */
+QComboBox, QPushButton {
+    background-color: #3c3c3c; /* Background color */
+    border: 1px solid #555555; /* Border color */
+    padding: 5px; /* Padding */
+    margin: 2px; /* Margin */
+    border-radius: 5px; /* Rounded corners */
+}
+
+QComboBox:hover, QPushButton:hover {
+    background-color: #4d4d4d; /* Background color on hover */
+}
+
+QComboBox:pressed, QPushButton:pressed {
+    background-color: #5e5e5e; /* Background color on press */
+}
+
+/* ComboBox dropdown styles */
+QComboBox QAbstractItemView {
+    background-color: #3c3c3c; /* Dropdown background */
+    selection-background-color: #565656; /* Selected item background */
+    selection-color: #ffffff; /* Selected item text color */
+}
+
+/* Scrollbar styles */
+QScrollBar:vertical {
+    border: 1px solid #2b2b2b; /* Scrollbar border */
+    background: #3c3c3c; /* Scrollbar background */
+    width: 10px;
+    margin: 22px 0 22px 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #555555; /* Scrollbar handle */
+    min-height: 20px;
+    border-radius: 5px; /* Rounded scrollbar handle */
+}
+
+QScrollBar::add-line:vertical {
+    border: 1px solid #2b2b2b;
+    background: #4d4d4d;
+    height: 20px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    border: 1px solid #2b2b2b;
+    background: #4d4d4d;
+    height: 20px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+/* Styles for header (title bar) */
+QWidget#header {
+    background-color: #2b2b2b; /* Header background color */
+    color: #d3d3d3; /* Header text color */
+    padding: 10px; /* Padding */
+    border-bottom: 2px solid #555555; /* Bottom border */
+}
+
+QWidget#header QLabel {
+    color: #d3d3d3; /* Text color for QLabel inside the header */
+}
+
+QPushButton#closeButton, QPushButton#minimizeButton {
+    background: none; /* No background */
+    border: none; /* No border */
+    color: #d3d3d3; /* Button text color */
+    font-size: 16px; /* Font size */
+}
+
+QPushButton#closeButton:hover, QPushButton#minimizeButton:hover {
+    color: #ff5555; /* Button text color on hover */
+}
+
+/* LineEdit styles */
+QLineEdit {
+    background-color: #3c3c3c; /* Background color */
+    border: 1px solid #555555; /* Border color */
+    padding: 5px; /*Padding */
+    border-radius: 5px; /* Rounded corners */
+    color: #d3d3d3; /* Text color */
+}
+
+/* Table styles */
+QTableView {
+    background-color: #2b2b2b; /* Background color */
+    gridline-color: #555555; /* Grid lines color */
+}
+
+QHeaderView::section {
+    background-color: #3c3c3c; /* Header background */
+    color: #d3d3d3; /* Header text color */
+    padding: 5px; /* Padding */
+    border: 1px solid #555555; /* Border */
+}
+
+QTableView::item {
+    padding: 5px; /* Padding for items */
+}
+
+QTableView::item:selected {
+    background: #565656; /* Background for selected items */
+    color: #ffffff; /* Text color for selected items */
+}

@@ -1,0 +1,141 @@
+QWidget {
+    background-color: #f0f0f0; /* Светлый фон для приложения */
+    color: #2b2b2b; /* Цвет текста */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* Шрифт */
+    font-size: 12pt; /* Размер шрифта */
+}
+
+/* Стили для QLabel */
+QLabel {
+    color: #2b2b2b; /* Цвет текста */
+    font-weight: bold; /* Жирный текст */
+}
+
+/* Стили для QMenuBar */
+QMenuBar {
+    background-color: #e0e0e0; /* Фон меню */
+    border-bottom: 1px solid #cccccc; /* Нижняя граница */
+}
+
+QMenuBar::item {
+    background-color: transparent; /* Прозрачный фон */
+    border: 1px solid #cccccc; /* Граница вокруг элементов меню */
+    padding: 5px 10px; /* Отступы для элементов меню */
+    margin: 1px; /* Отступы между элементами */
+    border-radius: 4px; /* Скругленные углы */
+    color: #2b2b2b; /* Цвет текста */
+}
+
+QMenuBar::item:selected {
+    background-color: #d0d0d0; /* Цвет выделения при наведении */
+    color: #2b2b2b; /* Цвет текста при выделении */
+}
+
+/* Стили для QMenu */
+QMenu {
+    background-color: #f0f0f0; /* Фон меню */
+    border: 1px solid #cccccc; /* Граница */
+}
+
+QMenu::item {
+    background-color: transparent; /* Прозрачный фон */
+    padding: 5px 20px; /* Отступы */
+    color: #2b2b2b; /* Цвет текста */
+}
+
+QMenu::item:selected {
+    background-color: #d0d0d0; /* Фон для выбранного элемента */
+    color: #000000; /* Цвет текста для выбранного элемента */
+}
+
+/* Стили для QComboBox и QPushButton */
+QComboBox, QPushButton {
+    background-color: #e0e0e0; /* Фон */
+    border: 1px solid #cccccc; /* Цвет границы */
+    padding: 5px; /* Отступы */
+    margin: 2px; /* Отступы */
+    border-radius: 5px; /* Скругленные углы */
+}
+
+QComboBox:hover, QPushButton:hover {
+    background-color: #d0d0d0; /* Фон при наведении */
+}
+
+QComboBox:pressed, QPushButton:pressed {
+    background-color: #c0c0c0; /* Фон при нажатии */
+}
+
+/* Стили для выпадающего списка QComboBox */
+QComboBox QAbstractItemView {
+    background-color: #f0f0f0; /* Фон выпадающего списка */
+    selection-background-color: #d0d0d0; /* Фон для выбранного элемента */
+    selection-color: #000000; /* Цвет текста для выбранного элемента */
+}
+
+/* Стили для вертикального QScrollBar */
+QScrollBar:vertical {
+    border: 1px solid #f0f0f0; /* Граница скроллбара */
+    background: #e0e0e0; /* Фон скроллбара */
+    width: 10px;
+    margin: 22px 0 22px 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #cccccc; /* Ручка скроллбара */
+    min-height: 20px;
+    border-radius: 5px; /* Скругленные углы ручки скроллбара */
+}
+
+QScrollBar::add-line:vertical {
+    border: 1px solid #f0f0f0;
+    background: #d0d0d0;
+    height: 20px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    border: 1px solid #f0f0f0;
+    background: #d0d0d0;
+    height: 20px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+/* Стили для заголовка (title bar) */
+QWidget#header {
+    background-color: #e0e0e0; /* Фон заголовка */
+    color: #2b2b2b; /* Цвет текста заголовка */
+    padding: 10px; /* Отступы */
+    border-bottom: 2px solid #cccccc; /* Нижняя граница */
+}
+
+QWidget#header QLabel {
+    color: #2b2b2b; /* Цвет текста для QLabel внутри заголовка */
+}
+
+QPushButton#closeButton, QPushButton#minimizeButton {
+    background: none; /* Без фона */
+    border: none; /* Без границы */
+    color: #2b2b2b; /* Цвет текста кнопок */
+    font-size: 16px; /* Размер шрифта */
+}
+
+QPushButton#closeButton:hover, QPushButton#minimizeButton:hover {
+    color: #ff5555; /* Цвет текста кнопок при наведении */
+}
+
+/* Стили для QLineEdit */
+QLineEdit {
+    background-color: #f0f0f0; /* Фон */
+    border: 1px solid #cccccc; /* Цвет границы */
+    padding: 5px; /* Отступы */
+    border-radius: 5px; /* Скругленные углы */
+    color: #2b2b2b; /* Цвет текста */
+}
+
+/* Стили для QTableView */
+QTableView {
+    background-color: #ffffff; /* Фон */
+    gridline-color: #cccccc; /* Цвет линий сетки */
+}
