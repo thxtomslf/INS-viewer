@@ -28,6 +28,7 @@ public:
     void loadConfigureUartPage();
 
     void reconfigureUart();
+    void setExpanded(bool expanded);
 
 private slots:
     void onConnectButtonClicked();
@@ -36,6 +37,8 @@ private:
     void setEnabledComboBoxes(bool value);
 
     void prepareUartParams();
+    void updateWidgetState();
+
 private:
     InsCommandProcessor *serialReaderWriter;
 
@@ -47,6 +50,8 @@ private:
     QSerialPort::Parity parity;
     QSerialPort::StopBits stopBits;
     QSerialPort::FlowControl flowControl;
+
+    bool isExpanded;
 };
 
 #endif // UARTWIDGET_H

@@ -4,6 +4,7 @@
 #include "inscommandprocessor.h"
 #include "routablewidget.cpp"
 #include "SensorDataDAO.h"
+#include "uartwidget.h"
 
 #include <DynamicSetting.h>
 #include <QPushButton>
@@ -23,19 +24,27 @@ public:
                          QWidget *parent = nullptr);
     ~ChartWidget();
 
+    void onPageHide() override;
+    void onPageShow(Page page) override;
+
 private:
     void clearGraphs();
     void updateGraphs(const SensorData &data, const QDateTime &timstamp);
 
 private slots:
     void loadDataForPeriod();
-    void onUartButtonClicked();
+    void handleStopSignal();
     void showData();
     void stopShowData();
+    void toggleUartWidget();
+    void onUartConnectionChanged(bool connected);
+    void updateControlsVisibility(bool visible);
 
 private:
     InsCommandProcessor *processor;
     SensorDataDAO *dao;
+    UartWidget *uartWidget;
+    bool isUartWidgetVisible;
 
     Ui::ChartWidget *ui;
 };

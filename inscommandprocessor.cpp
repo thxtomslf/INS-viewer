@@ -80,6 +80,8 @@ void InsCommandProcessor::reconfigureUart(QSerialPort::BaudRate baudRate, QSeria
         qDebug() << "Failed to send full command";
         throw new QException();
     }
+
+    emit stopped();
 }
 
 void InsCommandProcessor::updateCounter() {
@@ -164,4 +166,19 @@ bool InsCommandProcessor::validateCRC(const QByteArray &message, uint8_t expecte
     }
 
     return expectedCrc == crc;
+}
+
+bool InsCommandProcessor::openSerialPort(const QString &portName, QSerialPort::BaudRate baudRate,
+                                       QSerialPort::DataBits dataBits, QSerialPort::Parity parity,
+                                       QSerialPort::StopBits stopBits, QSerialPort::FlowControl flowControl)
+{
+    bool result = SerialReaderWriter::openSerialPort(portName, baudRate, dataBits, parity, stopBits, flowControl);
+    emit connectionStatusChanged(result);
+    return result;
+}
+
+void InsCommandProcessor::closeSerialPort()
+{
+    SerialReaderWriter::closeSerialPort();
+    emit connectionStatusChanged(false);
 }

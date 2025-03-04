@@ -26,6 +26,13 @@ public:
     explicit InsCommandProcessor(QObject *parent = nullptr);
     ~InsCommandProcessor();
 
+    virtual bool openSerialPort(const QString &portName, QSerialPort::BaudRate baudRate,
+                       QSerialPort::DataBits dataBits, QSerialPort::Parity parity,
+                       QSerialPort::StopBits stopBits, QSerialPort::FlowControl flowControl) override;
+    virtual void closeSerialPort() override;
+
+    bool isConnected() const { return serialPort && serialPort->isOpen(); }
+
     void readData(const std::function<void(const QByteArray&)> &callback);
     void interrupt();
     void reconfigureUart(QSerialPort::BaudRate baudRate, QSerialPort::DataBits dataBits, QSerialPort::Parity parity, QSerialPort::FlowControl flowControl, QSerialPort::StopBits stopBits);
@@ -33,6 +40,10 @@ public:
 
 public:
     int getFrequency();
+
+signals:
+    void connectionStatusChanged(bool connected);
+    void stopped();
 
 private slots:
     void handleReadyRead();

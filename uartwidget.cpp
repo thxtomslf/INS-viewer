@@ -7,11 +7,13 @@
 #include <QSerialPortInfo>
 #include <QMessageBox>
 #include <QStandardItemModel>
+#include <QPropertyAnimation>
 
 UartWidget::UartWidget(InsCommandProcessor *serial, QWidget *parent) :
     RoutableWidget(parent),
     ui(new Ui::UartWidget),
-    serialReaderWriter(serial)
+    serialReaderWriter(serial),
+    isExpanded(true)
 {
     serailPortMonitor = new SerialPortMonitor();
     ui->setupUi(this);
@@ -37,23 +39,23 @@ UartWidget::UartWidget(InsCommandProcessor *serial, QWidget *parent) :
     });
     connect(serailPortMonitor, &SerialPortMonitor::portDeleted, [=](const QString &portName) {
         qDebug() << "Signal received for deleted port:" << portName;
-        int index = ui->PortNameComboBox->findText(portName); // Находим индекс элемента по значению
+        int index = ui->PortNameComboBox->findText(portName);
         if (index != -1) {
-            ui->PortNameComboBox->removeItem(index); // Удаляем элемент по найденному индексу
+            ui->PortNameComboBox->removeItem(index);
             qDebug() << "Removed item:" << portName;
         } else {
             qDebug() << "Item not found:" << portName;
         }
     });
 
-
     QFile file(":/gui/darktheme.qss");
-
     if (file.open(QFile::ReadOnly | QFile::Text)) {
         QString stylesheet = QLatin1String(file.readAll());
         qApp->setStyleSheet(stylesheet);
     }
     qDebug() << file.errorString();
+
+    loadSetupUartPage();
 }
 
 UartWidget::~UartWidget() {
@@ -167,7 +169,6 @@ void UartWidget::onPageShow(Page page) {
     }
 }
 
-
 void UartWidget::reconfigureUart() {
     prepareUartParams();
     serialReaderWriter->reconfigureUart(baudRate, dataBits, parity, flowControl, stopBits);
@@ -180,6 +181,51 @@ void UartWidget::onConnectButtonClicked() {
     if (!serialReaderWriter->openSerialPort(ui->PortNameComboBox->currentText(), baudRate, dataBits, parity, stopBits, flowControl)) {
         QMessageBox::critical(this, "Connection Error", serialReaderWriter->getLastError());
     } else {
+        // Update widget state before navigation
+        loadConfigureUartPage();
         PageRouter::instance().navigateTo(Page::Graphics);
     }
+}
+
+void UartWidget::setExpanded(bool expanded)
+{
+    if (isExpanded != expanded) {
+        isExpanded = expanded;
+        updateWidgetState();
+    }
+}
+
+void UartWidget::updateWidgetState()
+{
+    // Hide/show buttons based on connection status
+    bool isConnected = serialReaderWriter->isConnected();
+    ui->ConnectButton->setVisible(isExpanded && !isConnected);
+    ui->reconfigureUartButton->setVisible(isExpanded && isConnected);
+
+    // Set minimum widths for comboboxes
+    int minWidth = isExpanded ? 200 : 50;
+    ui->BaudRateComboBox->setMinimumWidth(minWidth);
+    ui->DataBitsComboBox->setMinimumWidth(minWidth);
+    ui->ParityComboBox->setMinimumWidth(minWidth);
+    ui->StopBitsComboBox->setMinimumWidth(minWidth);
+    ui->FlowControlComboBox->setMinimumWidth(minWidth);
+    ui->PortNameComboBox->setMinimumWidth(minWidth);
+
+    // Update labels visibility
+    ui->baudRateLabel->setVisible(isExpanded);
+    ui->dataBitsLabel->setVisible(isExpanded);
+    ui->parityLabel->setVisible(isExpanded);
+    ui->stopBitsLabel->setVisible(isExpanded);
+    ui->flowControlLabel->setVisible(isExpanded);
+    ui->portNameLabel->setVisible(isExpanded && !isConnected);
+
+    // Update layout spacing
+    QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(this->layout());
+    if (layout) {
+        layout->setSpacing(isExpanded ? 10 : 2);
+        layout->setContentsMargins(5, 5, 5, 5);
+    }
+
+    // Update combo boxes state based on connection status
+    setEnabledComboBoxes(isConnected);
 }

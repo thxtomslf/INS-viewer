@@ -1,29 +1,21 @@
 #include "togglebutton.h"
 #include "ui_togglebutton.h"
 
-ToggleButton::ToggleButton(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ToggleButton)
+ToggleButton::ToggleButton(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::ToggleButton)
 {
     ui->setupUi(this);
 
-    ui->onButton->setDisabled(false);
-    ui->offButton->setDisabled(true);
+    // Set initial states
+    ui->startButton->setEnabled(true);
+    ui->pauseButton->setEnabled(false);
+    ui->stopButton->setEnabled(false);
 
-    connect(ui->onButton, SIGNAL(clicked()), this, SLOT(onClicked()));
-    connect(ui->offButton, SIGNAL(clicked()), this, SLOT(offClicked()));
-}
-
-void ToggleButton::onClicked() {
-    ui->onButton->setDisabled(true);
-    ui->offButton->setDisabled(false);
-    emit onSignal();
-}
-
-void ToggleButton::offClicked() {
-    ui->onButton->setDisabled(false);
-    ui->offButton->setDisabled(true);
-    emit offSignal();
+    // Connect signals
+    connect(ui->startButton, &QPushButton::clicked, this, &ToggleButton::onStartClicked);
+    connect(ui->pauseButton, &QPushButton::clicked, this, &ToggleButton::onPauseClicked);
+    connect(ui->stopButton, &QPushButton::clicked, this, &ToggleButton::onStopClicked);
 }
 
 ToggleButton::~ToggleButton()
@@ -31,12 +23,26 @@ ToggleButton::~ToggleButton()
     delete ui;
 }
 
-void ToggleButton::clickOn()
+void ToggleButton::onStartClicked()
 {
-    ui->onButton->click();
+    ui->startButton->setEnabled(false);
+    ui->pauseButton->setEnabled(true);
+    ui->stopButton->setEnabled(true);
+    emit startSignal();
 }
 
-void ToggleButton::clickOff()
+void ToggleButton::onPauseClicked()
 {
-    ui->offButton->click();
+    ui->startButton->setEnabled(true);
+    ui->pauseButton->setEnabled(false);
+    ui->stopButton->setEnabled(true);
+    emit pauseSignal();
+}
+
+void ToggleButton::onStopClicked()
+{
+    ui->startButton->setEnabled(true);
+    ui->pauseButton->setEnabled(false);
+    ui->stopButton->setEnabled(false);
+    emit stopSignal();
 }

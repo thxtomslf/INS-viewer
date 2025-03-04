@@ -4,9 +4,14 @@
 #include "dynamicplot.h"
 #include "comand/commandresponse.h"
 #include "pagerouter.h"
+#include "uartwidget.h"
 
 #include <QVBoxLayout>
 #include <QDateTime>
+#include <QStyle>
+#include <QPropertyAnimation>
+#include <QParallelAnimationGroup>
+#include <QSequentialAnimationGroup>
 
 
 ChartWidget::ChartWidget(InsCommandProcessor *serial,
@@ -14,10 +19,30 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
                          std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                          std::shared_ptr<DynamicSetting<int>> plotSize,
                          QWidget *parent)
-    : RoutableWidget(parent), processor(serial), dao(dao), ui(new Ui::ChartWidget)
+    : RoutableWidget(parent), processor(serial), dao(dao), ui(new Ui::ChartWidget), isUartWidgetVisible(true)
 {
     ui->setupUi(this);
 
+    // Initialize UartWidget
+    uartWidget = new UartWidget(processor);
+    QVBoxLayout* uartLayout = new QVBoxLayout(ui->uartContainer);
+    uartLayout->addWidget(uartWidget);
+    uartLayout->setContentsMargins(0, 0, 0, 0);
+
+    // Set initial splitter sizes (1/3 for UART, 2/3 for charts)
+    QList<int> sizes;
+    sizes << width() / 3 << (width() * 2) / 3;
+    ui->mainSplitter->setSizes(sizes);
+
+    // Setup toggle button
+    ui->toggleUartButton->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+    ui->toggleUartButton->setToolTip("Скрыть UART");
+
+    // Connect signals
+    connect(ui->toggleUartButton, &QPushButton::clicked, this, &ChartWidget::toggleUartWidget);
+    connect(processor, &InsCommandProcessor::connectionStatusChanged, this, &ChartWidget::onUartConnectionChanged);
+
+    // Setup charts
     ui->temperatureChart->setLabel("Температура, °C");
     ui->temperatureChart->setMaxBufferSize(plotBufferSize);
     ui->temperatureChart->setPlotSize(plotSize);
@@ -68,19 +93,33 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
 
     ui->navigatorButton->setObjects({ui->envScrollArea, ui->acceleroScrollArea, ui->gyroScrollArea, ui->magnetoScrollArea});
 
-    connect(ui->startToggleButton, &ToggleButton::onSignal, this, &ChartWidget::showData);
-    connect(ui->startToggleButton, &ToggleButton::offSignal, this, &ChartWidget::stopShowData);
+    // Connect ToggleButton signals
+    connect(ui->startToggleButton, &ToggleButton::startSignal, this, &ChartWidget::showData);
+    connect(ui->startToggleButton, &ToggleButton::pauseSignal, this, &ChartWidget::stopShowData);
+    connect(ui->startToggleButton, &ToggleButton::stopSignal, this, &ChartWidget::handleStopSignal);
+
     connect(ui->loadFromDbButton, &QPushButton::clicked, this, &ChartWidget::loadDataForPeriod);
-    connect(ui->uartButton, &QPushButton::clicked, this, &ChartWidget::onUartButtonClicked);
+
+    connect(processor, &InsCommandProcessor::stopped, ui->startToggleButton, &ToggleButton::onPauseClicked);
 
     ui->startRangeWidget->setDateTime(QDateTime::currentDateTime());
     ui->endRangeWidget->setDateTime(QDateTime::currentDateTime().addMSecs(10000));
+
+    // Initialize controls visibility
+    updateControlsVisibility(false);
 }
 
 ChartWidget::~ChartWidget()
 {
     stopShowData();
     delete ui;
+}
+
+void ChartWidget::onPageHide() {
+
+}
+void ChartWidget::onPageShow(Page page) {
+
 }
 
 void ChartWidget::clearGraphs()
@@ -170,10 +209,40 @@ void ChartWidget::loadDataForPeriod()
     });
 }
 
-void ChartWidget::onUartButtonClicked()
+void ChartWidget::toggleUartWidget()
 {
-    ui->startToggleButton->clickOff();
-    PageRouter::instance().navigateTo(Page::ConfigureUart);
+    isUartWidgetVisible = !isUartWidgetVisible;
+    
+    // Update button icon and tooltip
+    if (isUartWidgetVisible) {
+        ui->toggleUartButton->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+        ui->toggleUartButton->setToolTip("Скрыть UART");
+        
+        // Restore the original splitter sizes
+        QList<int> sizes;
+        sizes << width() / 3 << (width() * 2) / 3;
+        ui->mainSplitter->setSizes(sizes);
+        
+        // Show all UART controls
+        uartWidget->setExpanded(true);
+    } else {
+        ui->toggleUartButton->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+        ui->toggleUartButton->setToolTip("Показать UART");
+        
+        // Minimize the left side
+        QList<int> sizes;
+        sizes << 100 << width() - 100;
+        ui->mainSplitter->setSizes(sizes);
+        
+        // Collapse UART controls
+        uartWidget->setExpanded(false);
+    }
+}
+
+void ChartWidget::handleStopSignal()
+{
+    stopShowData();
+    clearGraphs();
 }
 
 void ChartWidget::showData()
@@ -205,4 +274,14 @@ void ChartWidget::showData()
 void ChartWidget::stopShowData()
 {
     processor->interrupt();
+}
+
+void ChartWidget::onUartConnectionChanged(bool connected)
+{
+    // Implementation of the method
+}
+
+void ChartWidget::updateControlsVisibility(bool visible)
+{
+    // Implementation of the method
 }

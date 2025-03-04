@@ -53,14 +53,11 @@ int main(int argc, char *argv[])
 
     InsCommandProcessor *processor = new InsCommandProcessor();
     SensorDataDAO *dao = new SensorDataDAO("stats");
-    UartWidget *uavWidget = new UartWidget(processor);
     ChartWidget *chartWidget = new ChartWidget(processor, dao, plotBufferSize, plotSize);
 
-    PageRouter::instance().registerWidget(Page::SetupUart, uavWidget);
-    PageRouter::instance().registerWidget(Page::ConfigureUart, uavWidget);
     PageRouter::instance().registerWidget(Page::Graphics, chartWidget);
 
-    PageRouter::instance().navigateTo(Page::SetupUart);
+    PageRouter::instance().navigateTo(Page::Graphics);
 
     mainWindow.show();
     return app.exec();

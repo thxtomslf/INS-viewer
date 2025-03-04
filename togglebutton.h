@@ -2,6 +2,8 @@
 #define TOGGLEBUTTON_H
 
 #include <QWidget>
+#include <QPushButton>
+#include <QHBoxLayout>
 
 namespace Ui {
 class ToggleButton;
@@ -16,19 +18,20 @@ public:
     ~ToggleButton();
 
 signals:
-    void onSignal();
-    void offSignal();
+    void startSignal();
+    void stopSignal();
+    void pauseSignal();
 
-public:
-    void clickOn();
-    void clickOff();
-
-private slots:
-    void onClicked();
-    void offClicked();
+public slots:
+    void onStartClicked();
+    void onStopClicked();
+    void onPauseClicked();
 
 private:
     Ui::ToggleButton *ui;
+    QPushButton *startButton;
+    QPushButton *stopButton;
+    QPushButton *pauseButton;
 };
 
 #endif // TOGGLEBUTTON_H

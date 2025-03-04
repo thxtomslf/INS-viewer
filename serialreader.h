@@ -12,14 +12,14 @@ public:
     explicit SerialReaderWriter(QObject *parent = nullptr);
     ~SerialReaderWriter();
 
-    bool openSerialPort(const QString &portName,
+    virtual bool openSerialPort(const QString &portName,
                         QSerialPort::BaudRate baudRate,
                         QSerialPort::DataBits dataBits,
                         QSerialPort::Parity parity,
                         QSerialPort::StopBits stopBits,
                         QSerialPort::FlowControl flowControl);
 
-    void closeSerialPort();
+    virtual void closeSerialPort();
     QString getLastError() const;
 
 protected:
