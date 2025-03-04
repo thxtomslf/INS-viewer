@@ -12,6 +12,7 @@
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 #include <QSequentialAnimationGroup>
+#include <QTabWidget>
 
 
 ChartWidget::ChartWidget(InsCommandProcessor *serial,
@@ -90,8 +91,6 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
     ui->magnetoChartZ->setLabel("Магнитная индукция Z, Гc");
     ui->magnetoChartZ->setMaxBufferSize(plotBufferSize);
     ui->magnetoChartZ->setPlotSize(plotSize);
-
-    ui->navigatorButton->setObjects({ui->envScrollArea, ui->acceleroScrollArea, ui->gyroScrollArea, ui->magnetoScrollArea});
 
     // Connect ToggleButton signals
     connect(ui->startToggleButton, &ToggleButton::startSignal, this, &ChartWidget::showData);

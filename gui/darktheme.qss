@@ -158,3 +158,32 @@ QTableView::item:selected {
     background: #565656; /* Background for selected items */
     color: #ffffff; /* Text color for selected items */
 }
+
+QTabWidget::pane {
+    border: 1px solid #2b2b2b;
+    background-color: #333333;
+}
+
+QTabWidget::tab-bar {
+    left: 5px;
+}
+
+QTabBar::tab {
+    background-color: #2b2b2b;
+    color: #ffffff;
+    border: 1px solid #1e1e1e;  /* Darker border for unselected tabs */
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 8px 12px;
+}
+
+QTabBar::tab:selected {
+    background-color: #333333;
+    border: 1px solid #4d4d4d;  /* Lighter border for selected tab */
+    border-bottom: none;
+}
+
+QTabBar::tab:hover {
+    background-color: #3b3b3b;
+}

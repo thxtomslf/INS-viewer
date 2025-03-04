@@ -11,10 +11,11 @@
 
 #include <comand/SensorData.h>
 
+#include <ISensorDataDAO.h>
 #include <QList>
 
 
-class SensorDataDAO
+class SensorDataDAO : public ISensorDataDAO 
 {
 public:
     SensorDataDAO(const QString &databaseName)

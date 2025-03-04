@@ -126,120 +126,119 @@
      <widget class="QWidget" name="rightContainer">
       <layout class="QVBoxLayout" name="rightLayout">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <item>
-          <widget class="QScrollArea" name="acceleroScrollArea">
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="scrollAreaWidgetContentsAccelero">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>192</width>
-              <height>220</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayoutAccelero">
-             <item>
-              <widget class="DynamicPlot" name="acceleroChartX" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="acceleroChartY" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="acceleroChartZ" native="true"/>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-         <item>
-          <widget class="QScrollArea" name="envScrollArea">
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="scrollAreaWidgetContentsEnv">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>192</width>
-              <height>220</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayoutEnv">
-             <item>
-              <widget class="DynamicPlot" name="humidityChart" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="pressureChart" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="temperatureChart" native="true"/>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-         <item>
-          <widget class="QScrollArea" name="gyroScrollArea">
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="scrollAreaWidgetContentsGyro">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>191</width>
-              <height>220</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayoutGyro">
-             <item>
-              <widget class="DynamicPlot" name="gyroChartX" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="gyroChartY" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="gyroChartZ" native="true"/>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-         <item>
-          <widget class="QScrollArea" name="magnetoScrollArea">
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="scrollAreaWidgetContents">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>192</width>
-              <height>220</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_2">
-             <item>
-              <widget class="DynamicPlot" name="magnetoChartX" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="magnetoChartY" native="true"/>
-             </item>
-             <item>
-              <widget class="DynamicPlot" name="magnetoChartZ" native="true"/>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QTabWidget" name="tabWidget">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="QWidget" name="tabEnvironment">
+          <attribute name="title">
+           <string>Окр.среда</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutEnv">
+           <item>
+            <widget class="QScrollArea" name="envScrollArea">
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContentsEnv">
+              <layout class="QVBoxLayout" name="verticalLayoutEnv_2">
+               <item>
+                <widget class="DynamicPlot" name="humidityChart" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="pressureChart" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="temperatureChart" native="true"/>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabAcceleration">
+          <attribute name="title">
+           <string>Ускорение</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutAccelero">
+           <item>
+            <widget class="QScrollArea" name="acceleroScrollArea">
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContentsAccelero">
+              <layout class="QVBoxLayout" name="verticalLayoutAccelero_2">
+               <item>
+                <widget class="DynamicPlot" name="acceleroChartX" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="acceleroChartY" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="acceleroChartZ" native="true"/>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabGyroscope">
+          <attribute name="title">
+           <string>Гироскоп</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutGyro">
+           <item>
+            <widget class="QScrollArea" name="gyroScrollArea">
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContentsGyro">
+              <layout class="QVBoxLayout" name="verticalLayoutGyro_2">
+               <item>
+                <widget class="DynamicPlot" name="gyroChartX" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="gyroChartY" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="gyroChartZ" native="true"/>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabMagnetometer">
+          <attribute name="title">
+           <string>Магнитометр</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutMagneto">
+           <item>
+            <widget class="QScrollArea" name="magnetoScrollArea">
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContents">
+              <layout class="QVBoxLayout" name="verticalLayoutMagneto_2">
+               <item>
+                <widget class="DynamicPlot" name="magnetoChartX" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="magnetoChartY" native="true"/>
+               </item>
+               <item>
+                <widget class="DynamicPlot" name="magnetoChartZ" native="true"/>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -257,9 +256,6 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="ObjectNavigator" name="navigatorButton" native="true"/>
-     </item>
     </layout>
    </item>
   </layout>
@@ -275,12 +271,6 @@
    <class>ToggleButton</class>
    <extends>QWidget</extends>
    <header>togglebutton.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ObjectNavigator</class>
-   <extends>QWidget</extends>
-   <header>objectnavigator.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
