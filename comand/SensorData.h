@@ -98,6 +98,22 @@ public:
         return dataSendCount;
     }
 
+    void setEnvironmentalMeasures(const QList<float> &measures) {
+        envMeasures_ = measures;
+    }
+
+    void setGyroMeasures(const QList<int16_t> &measures) {
+        gyroMeasures_ = measures;
+    }
+
+    void setAcceleroMeasures(const QList<int16_t> &measures) {
+        acceleroMeasures_ = measures;
+    }
+
+    void setMagnetoMeasures(const QList<int16_t> &measures) {
+        magnetoMeasures_ = measures;
+    }
+
 private:
     QList<float> envMeasures_;
     QList<int16_t> gyroMeasures_;

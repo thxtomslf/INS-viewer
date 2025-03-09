@@ -32,11 +32,12 @@ private:
     void updateGraphs(const SensorData &data, const QDateTime &timstamp);
 
 private slots:
-    void loadDataForPeriod();
-    void handleStopSignal();
     void showData();
     void stopShowData();
+    void handleStopSignal();
     void toggleUartWidget();
+    void saveToFile();
+    void loadFromFile();
     void onUartConnectionChanged(bool connected);
     void updateControlsVisibility(bool visible);
 

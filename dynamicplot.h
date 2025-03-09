@@ -21,6 +21,7 @@ public:
     void setPlotSize(std::shared_ptr<DynamicSetting<int>> plotWidth);
     void clear();
     void plotSensorData(const QList<TimestampedSensorData> &dataList, std::function<double(const TimestampedSensorData&)> valueExtractor);
+    QList<QPair<QDateTime, double>> getData() const;
 
 private slots:
     void onMaxBufferSizeChanged(int newSize);

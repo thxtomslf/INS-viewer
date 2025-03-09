@@ -126,3 +126,13 @@ void DynamicPlot::onMaxBufferSizeChanged(int newSize)
     valueData_.resize(maxBufferSize_);
     clear();
 }
+
+QList<QPair<QDateTime, double>> DynamicPlot::getData() const
+{
+    QList<QPair<QDateTime, double>> dataList;
+    for (int i = 0; i < currentSize_; ++i) {
+        QDateTime time = QDateTime::fromMSecsSinceEpoch(timeData_[i] * 1000);
+        dataList.append(qMakePair(time, valueData_[i]));
+    }
+    return dataList;
+}
