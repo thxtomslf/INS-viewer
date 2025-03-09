@@ -35,7 +35,7 @@ public:
         db.close();
     }
 
-    bool insertSensorData(const SensorData &data)
+    bool insertSensorData(const TimestampedSensorData &data)
     {
         QSqlQuery query;
         query.prepare("INSERT INTO SensorData (timestamp, temperature, humidity, pressure, gyro_x, gyro_y, gyro_z, accelero_x, accelero_y, accelero_z, "
@@ -79,6 +79,10 @@ public:
         }
 
         return true;
+    }
+
+    QList<TimestampedSensorData> selectAllSensorData() override {
+        return QList<TimestampedSensorData>();
     }
 
     QList<TimestampedSensorData> selectSensorData(const QDateTime &start, const QDateTime &end)

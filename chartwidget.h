@@ -3,22 +3,30 @@
 
 #include "inscommandprocessor.h"
 #include "routablewidget.cpp"
-#include "SensorDataDAO.h"
 #include "uartwidget.h"
 
+#include <CsvSensorDataDAO.h>
 #include <DynamicSetting.h>
 #include <QPushButton>
+#include <RangeSlider.h>
 
 namespace Ui {
 class ChartWidget;
+
 }
 
 class ChartWidget : public RoutableWidget {
     Q_OBJECT
 
+
 public:
+
+    enum WidgetMode {
+        FILE,
+        UART
+    };
+
     explicit ChartWidget(InsCommandProcessor *serial,
-                         SensorDataDAO *dao,
                          std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                          std::shared_ptr<DynamicSetting<int>> plotSize,
                          QWidget *parent = nullptr);
@@ -30,6 +38,8 @@ public:
 private:
     void clearGraphs();
     void updateGraphs(const SensorData &data, const QDateTime &timstamp);
+    void freeFile();
+    void setMode(WidgetMode mode);
 
 private slots:
     void showData();
@@ -40,14 +50,20 @@ private slots:
     void loadFromFile();
     void onUartConnectionChanged(bool connected);
     void updateControlsVisibility(bool visible);
+    void loadDataForPeriod(const QDateTime &start, const QDateTime &end);
 
 private:
     InsCommandProcessor *processor;
-    SensorDataDAO *dao;
     UartWidget *uartWidget;
     bool isUartWidgetVisible;
+    CsvSensorDataDAO *csvDao = nullptr;
 
     Ui::ChartWidget *ui;
+
+    RangeSlider *rangeSlider;
+    bool isFileLoaded;
+    QDateTime minTimestamp;
+    QDateTime maxTimestamp;
 };
 
 #endif // CHARTWIDGET_H

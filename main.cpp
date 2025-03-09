@@ -52,8 +52,7 @@ int main(int argc, char *argv[])
     PageRouter::instance().initialize(&mainWindow);
 
     InsCommandProcessor *processor = new InsCommandProcessor();
-    SensorDataDAO *dao = new SensorDataDAO("stats");
-    ChartWidget *chartWidget = new ChartWidget(processor, dao, plotBufferSize, plotSize);
+    ChartWidget *chartWidget = new ChartWidget(processor, plotBufferSize, plotSize);
 
     PageRouter::instance().registerWidget(Page::Graphics, chartWidget);
 

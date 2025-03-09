@@ -5,7 +5,6 @@
 #include "comand/commandresponse.h"
 #include "pagerouter.h"
 #include "uartwidget.h"
-#include "csvsensordatadao.h"
 
 #include <QVBoxLayout>
 #include <QDateTime>
@@ -19,11 +18,10 @@
 
 
 ChartWidget::ChartWidget(InsCommandProcessor *serial,
-                         SensorDataDAO *dao,
                          std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                          std::shared_ptr<DynamicSetting<int>> plotSize,
                          QWidget *parent)
-    : RoutableWidget(parent), processor(serial), dao(dao), ui(new Ui::ChartWidget), isUartWidgetVisible(true)
+    : RoutableWidget(parent), processor(serial), ui(new Ui::ChartWidget), isUartWidgetVisible(true), isFileLoaded(false)
 {
     ui->setupUi(this);
 
@@ -32,6 +30,14 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
     QVBoxLayout* uartLayout = new QVBoxLayout(ui->uartContainer);
     uartLayout->addWidget(uartWidget);
     uartLayout->setContentsMargins(0, 0, 0, 0);
+
+    rangeSlider = new RangeSlider(this);
+    rangeSlider->setVisible(false); // Скрываем до загрузки файла
+    ui->horizontalLayout->insertWidget(5, rangeSlider); // Добавляем слайдер в layout
+
+    ui->currentFileLabel->setVisible(false);
+
+    connect(rangeSlider, &RangeSlider::rangeChanged, this, &ChartWidget::loadDataForPeriod);
 
     // Set initial splitter sizes (1/3 for UART, 2/3 for charts)
     QList<int> sizes;
@@ -154,63 +160,6 @@ void ChartWidget::updateGraphs(const SensorData &data, const QDateTime &timestam
 }
 
 
-// void ChartWidget::loadDataForPeriod()
-// {
-//     clearGraphs();
-
-//     QDateTime start = ui->startRangeWidget->dateTime();
-//     QDateTime end = ui->endRangeWidget->dateTime();
-//     QList<TimestampedSensorData> dataList = dao->selectSensorData(start, end);
-
-//     ui->temperatureChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getEnvironmentalMeasures().at(0);
-//     });
-
-//     ui->humidityChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getEnvironmentalMeasures().at(1);
-//     });
-
-//     ui->pressureChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getEnvironmentalMeasures().at(2);
-//     });
-
-//     ui->acceleroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getAcceleroMeasures().at(0);
-//     });
-
-//     ui->acceleroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getAcceleroMeasures().at(1);
-//     });
-
-//     ui->acceleroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getAcceleroMeasures().at(2);
-//     });
-
-//     ui->gyroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getGyroMeasures().at(0);
-//     });
-
-//     ui->gyroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getGyroMeasures().at(1);
-//     });
-
-//     ui->gyroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getGyroMeasures().at(2);
-//     });
-
-//     ui->magnetoChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getMagnetoMeasures().at(0);
-//     });
-
-//     ui->magnetoChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getMagnetoMeasures().at(1);
-//     });
-
-//     ui->magnetoChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-//         return data.getMagnetoMeasures().at(2);
-//     });
-// }
-
 void ChartWidget::toggleUartWidget()
 {
     isUartWidgetVisible = !isUartWidgetVisible;
@@ -249,6 +198,8 @@ void ChartWidget::handleStopSignal()
 
 void ChartWidget::showData()
 {
+    setMode(ChartWidget::WidgetMode::UART);
+
     processor->readData([this](const QByteArray &data) {
 
         CommandResponse<SensorData> response(data);
@@ -268,8 +219,6 @@ void ChartWidget::showData()
         }
 
         updateGraphs(response.getMessageBody(), QDateTime::currentDateTime());
-
-        dao->insertSensorData(response.getMessageBody());
     });
 }
 
@@ -374,9 +323,143 @@ void ChartWidget::saveToFile()
     }
 
     qDebug() << "Data saved to" << filePath;
+    QMessageBox::information(this, "Статус записи", QString("Экперимент успешно сохранен по пути:\n %1").arg(filePath));
 }
 
-void ChartWidget::loadFromFile()
-{
-    // TODO: Implement loading from file
+void ChartWidget::loadFromFile() {
+    QString filePath = QFileDialog::getOpenFileName(this, "Выберите CSV файл", QDir::currentPath(), "CSV Files (*.csv)");
+    if (filePath.isEmpty()) {
+        qDebug() << "File wasn't chosen";
+        return;
+    }
+
+    setMode(ChartWidget::WidgetMode::FILE);
+
+    try {
+        if (this->csvDao) {
+            delete this->csvDao;
+            this->csvDao = nullptr;
+        }
+        this->csvDao = new CsvSensorDataDAO(filePath);
+
+        // Получаем все данные из файла
+        QList<TimestampedSensorData> allData = csvDao->selectAllSensorData();
+        if (allData.isEmpty()) {
+            throw std::runtime_error("Файл не содержит данных.");
+        }
+
+        // Получаем минимальный и максимальный timestamp
+        minTimestamp = allData.first().getTimestamp();
+        maxTimestamp = allData.last().getTimestamp();
+
+        isFileLoaded = true;
+        // Устанавливаем диапазон слайдера
+        rangeSlider->setRange(minTimestamp, maxTimestamp);
+        rangeSlider->setVisible(true); // Показываем слайдер
+
+        loadDataForPeriod(minTimestamp, maxTimestamp);
+
+        ui->currentFileLabel->setText(QFileInfo(filePath).fileName());
+
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, "Ошибка", QString("Не удалось загрузить файл: %1").arg(e.what()));
+    }
+}
+
+void ChartWidget::setMode(WidgetMode mode) {
+    if (mode == ChartWidget::WidgetMode::UART) {
+        freeFile();
+        ui->label->setVisible(true);
+        ui->label_2->setVisible(true);
+        ui->readSpeedLabel->setVisible(true);
+        ui->writeSpeedLabel->setVisible(true);
+        ui->currentFileLabel->setVisible(false);
+    } else {
+        ui->label->setVisible(false);
+        ui->label_2->setVisible(false);
+        ui->readSpeedLabel->setVisible(false);
+        ui->writeSpeedLabel->setVisible(false);
+
+        rangeSlider->setVisible(true);
+        ui->currentFileLabel->setVisible(true);
+
+        ui->startToggleButton->onPauseClicked();
+    }
+}
+
+void ChartWidget::freeFile() {
+    if (this->csvDao) {
+        delete this->csvDao;
+        this->csvDao = nullptr;
+    }
+
+    isFileLoaded = false;
+
+    rangeSlider->setVisible(false);
+    ui->currentFileLabel->setVisible(false);
+}
+
+void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end) {
+    if (!isFileLoaded) {
+        qDebug() << "File wasn't loaded";
+        return;
+    }
+
+    // Очищаем графики
+    clearGraphs();
+
+    // Загружаем данные для выбранного диапазона
+    if (!this->csvDao) {
+        QMessageBox::critical(this, "Ошибка", QString("Файл для отображение не выбран"));
+    }
+
+    QList<TimestampedSensorData> dataList = this->csvDao->selectSensorData(start, end);
+
+    ui->temperatureChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getEnvironmentalMeasures().at(0);
+    });
+
+    ui->humidityChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getEnvironmentalMeasures().at(1);
+    });
+
+    ui->pressureChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getEnvironmentalMeasures().at(2);
+    });
+
+    ui->acceleroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getAcceleroMeasures().at(0);
+    });
+
+    ui->acceleroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getAcceleroMeasures().at(1);
+    });
+
+    ui->acceleroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getAcceleroMeasures().at(2);
+    });
+
+    ui->gyroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getGyroMeasures().at(0);
+    });
+
+    ui->gyroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getGyroMeasures().at(1);
+    });
+
+    ui->gyroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getGyroMeasures().at(2);
+    });
+
+    ui->magnetoChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getMagnetoMeasures().at(0);
+    });
+
+    ui->magnetoChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getMagnetoMeasures().at(1);
+    });
+
+    ui->magnetoChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+        return data.getMagnetoMeasures().at(2);
+    });
 }

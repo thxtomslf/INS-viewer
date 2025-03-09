@@ -52,6 +52,8 @@ file(GLOB SRC
      "settingswidget.cpp"
      "settingswidget.h"
      "settingswidget.ui"
+     "rangeslider.cpp"
+     "rangeslider.h"
 )
 
 set(PROJECT_SOURCES

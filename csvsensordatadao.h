@@ -29,7 +29,7 @@ public:
         } else {
             // Если файл пустой, записываем заголовок
             QTextStream out(&file);
-            out << "timestamp,temperature,humidity,pressure,gyro_x,gyro_y,gyro_z,accelero_x,accelero_y,accelero_z\n";
+            out << "timestamp,temperature,humidity,pressure,gyro_x,gyro_y,gyro_z,accelero_x,accelero_y,accelero_z,magneto_x,magneto_y,magneto_z\n";
         }
     }
 
@@ -39,7 +39,7 @@ public:
         }
     }
 
-    bool insertSensorData(const SensorData &data) override {
+    bool insertSensorData(const TimestampedSensorData &data) override {
         if (!file.isOpen()) {
             qDebug() << "File is not open:" << filePath;
             return false;
@@ -49,7 +49,8 @@ public:
         file.seek(file.size());
 
         QTextStream out(&file);
-        out << data.getEnvironmentalMeasures().at(0) << ","
+        out << data.getTimestamp().toMSecsSinceEpoch() << "," // Записываем timestamp в формате epoch
+            << data.getEnvironmentalMeasures().at(0) << ","
             << data.getEnvironmentalMeasures().at(1) << ","
             << data.getEnvironmentalMeasures().at(2) << ","
             << data.getGyroMeasures().at(0) << ","
@@ -60,8 +61,7 @@ public:
             << data.getAcceleroMeasures().at(2) << ","
             << data.getMagnetoMeasures().at(0) << ","
             << data.getMagnetoMeasures().at(1) << ","
-            << data.getMagnetoMeasures().at(2) << ","
-            << static_cast<int>(data.getDataSendCount()) << "\n";
+            << data.getMagnetoMeasures().at(2) << "\n";
 
         return true;
     }
@@ -83,7 +83,9 @@ public:
             QStringList fields = line.split(',');
 
             if (fields.size() == expectedColumnCount) {
-                QDateTime timestamp = QDateTime::fromString(fields[0], Qt::ISODate);
+                qint64 epochTime = fields[0].toLongLong(); // Считываем timestamp в формате epoch
+                QDateTime timestamp = QDateTime::fromMSecsSinceEpoch(epochTime); // Преобразуем в QDateTime
+
                 if (timestamp >= start && timestamp <= end) {
                     QList<float> envMeasures = {fields[1].toFloat(), fields[2].toFloat(), fields[3].toFloat()};
                     QList<int16_t> gyroMeasures = {static_cast<int16_t>(fields[4].toInt()), static_cast<int16_t>(fields[5].toInt()), static_cast<int16_t>(fields[6].toInt())};
@@ -93,6 +95,39 @@ public:
                     TimestampedSensorData data(envMeasures, gyroMeasures, acceleroMeasures, magnetoMeasures, timestamp);
                     dataList.append(data);
                 }
+            }
+        }
+
+        return dataList;
+    }
+
+    QList<TimestampedSensorData> selectAllSensorData() override {
+        QList<TimestampedSensorData> dataList;
+        if (!file.isOpen()) {
+            qDebug() << "File is not open:" << filePath;
+            return dataList;
+        }
+
+        // Перемещаем указатель в начало файла для чтения
+        file.seek(0);
+
+        QTextStream in(&file);
+        in.readLine(); // Пропускаем заголовок
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            QStringList fields = line.split(',');
+
+            if (fields.size() == expectedColumnCount) {
+                qint64 epochTime = fields[0].toLongLong(); // Считываем timestamp в формате epoch
+                QDateTime timestamp = QDateTime::fromMSecsSinceEpoch(epochTime); // Преобразуем в QDateTime
+
+                QList<float> envMeasures = {fields[1].toFloat(), fields[2].toFloat(), fields[3].toFloat()};
+                QList<int16_t> gyroMeasures = {static_cast<int16_t>(fields[4].toInt()), static_cast<int16_t>(fields[5].toInt()), static_cast<int16_t>(fields[6].toInt())};
+                QList<int16_t> acceleroMeasures = {static_cast<int16_t>(fields[7].toInt()), static_cast<int16_t>(fields[8].toInt()), static_cast<int16_t>(fields[9].toInt())};
+                QList<int16_t> magnetoMeasures = {static_cast<int16_t>(fields[10].toInt()), static_cast<int16_t>(fields[11].toInt()), static_cast<int16_t>(fields[12].toInt())};
+
+                TimestampedSensorData data(envMeasures, gyroMeasures, acceleroMeasures, magnetoMeasures, timestamp);
+                dataList.append(data);
             }
         }
 
