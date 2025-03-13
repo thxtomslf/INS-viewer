@@ -4,10 +4,14 @@
 #include <QThread>
 
 
-MainWindow::MainWindow(const DynamicSettingsFabric &settingsFabric, QWidget *parent)
+MainWindow::MainWindow(
+    const std::vector<DynamicSettingsFabric<int>> &fabrics,
+    const std::vector<DynamicSettingsFabric<bool>> &booleanFabrics,
+    QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
-      settingsFabric(settingsFabric)
+      fabrics(fabrics),
+      booleanFabrics(booleanFabrics)
 {
     ui->setupUi(this);
 
@@ -20,7 +24,7 @@ MainWindow::MainWindow(const DynamicSettingsFabric &settingsFabric, QWidget *par
     // Подключаем сигнал нажатия к слоту
     connect(openSettingsAction, &QAction::triggered, this, &MainWindow::openSettingsWindow);
 
-    settingsWidget = new SettingsWidget(settingsFabric);
+    settingsWidget = new SettingsWidget(fabrics, booleanFabrics);
 }
 
 
@@ -50,4 +54,3 @@ QWidget *MainWindow::getCurrentWidget() {
 void MainWindow::newWidget(QWidget *widget) {
     ui->mainWidget->addWidget(widget);
 }
-

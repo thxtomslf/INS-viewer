@@ -8,19 +8,18 @@
 #include <vector>
 #include "DynamicSetting.h"
 
+template <typename T>
 class DynamicSettingsFabric
 {
 public:
     DynamicSettingsFabric() = default;
 
-    template <typename T>
     std::shared_ptr<DynamicSetting<T>> createSetting(const std::string &name, const T &value, std::function<bool(const T&)> validator = nullptr) {
         auto setting = std::make_shared<DynamicSetting<T>>(value, validator);
         settings_[name] = setting;
         return setting;
     }
 
-    template <typename T>
     std::shared_ptr<DynamicSetting<T>> getSetting(const std::string &name) const {
         auto it = settings_.find(name);
         if (it != settings_.end()) {
@@ -37,8 +36,17 @@ public:
         return names;
     }
 
+    void setGroupName(const std::string &name) {
+        groupName_ = name;
+    }
+
+    std::string getGroupName() const {
+        return groupName_;
+    }
+
 private:
     std::map<std::string, std::shared_ptr<void>> settings_;
+    std::string groupName_;
 };
 
 #endif // DYNAMICSETTINGSFABRIC_H

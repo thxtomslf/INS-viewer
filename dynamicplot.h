@@ -20,7 +20,10 @@ public:
     void setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting);
     void setPlotSize(std::shared_ptr<DynamicSetting<int>> plotWidth);
     void clear();
-    void plotSensorData(const QList<TimestampedSensorData> &dataList, std::function<double(const TimestampedSensorData&)> valueExtractor);
+    void plotSensorData(
+        const QList<TimestampedSensorData> &dataList,
+        std::function<double(const TimestampedSensorData&)> valueExtractor,
+        std::function<bool(const TimestampedSensorData&)> shouldPlot = [](const TimestampedSensorData&) { return true; });
     QList<QPair<QDateTime, double>> getData() const;
 
 private slots:

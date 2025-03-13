@@ -22,14 +22,39 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    DynamicSettingsFabric settingsFabric;
+    std::vector<DynamicSettingsFabric<int>> settingsFabrics;
 
-    std::shared_ptr<DynamicSetting<int>> plotBufferSize = settingsFabric.createSetting("Размер буффера графиков", 500);
+    std::vector<DynamicSettingsFabric<bool>> booleanSettingsFabrics;
+    
+    DynamicSettingsFabric<int> generalSettings;
+    generalSettings.setGroupName("Общие настройки");
+    
+    std::shared_ptr<DynamicSetting<int>> plotBufferSize = generalSettings.createSetting("Размер буффера графиков", 500);
+    std::shared_ptr<DynamicSetting<int>> plotSize = generalSettings.createSetting("Размер графика", 300);
 
-    std::shared_ptr<DynamicSetting<int>> plotSize = settingsFabric.createSetting("Размер графика", 300);
+    settingsFabrics.push_back(generalSettings);
 
+    DynamicSettingsFabric<int> sensorDataSettings;
+    DynamicSettingsFabric<bool> sensorDataSettingsBoolean;
 
-    MainWindow mainWindow(settingsFabric);
+    std::string groupName = "Настройки экспорта/импорта экспериментов";
+    sensorDataSettings.setGroupName(groupName);
+    sensorDataSettingsBoolean.setGroupName(groupName);
+
+    std::shared_ptr<DynamicSetting<bool>> isEnvMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения окружающей среды", true);
+    std::shared_ptr<DynamicSetting<bool>> isGyroMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения гироскопа", true);
+    std::shared_ptr<DynamicSetting<bool>> isAcceleroMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения акселерометра", true);
+    std::shared_ptr<DynamicSetting<bool>> isMagnetoMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения магнитометра", true);
+
+    std::shared_ptr<DynamicSetting<int>> envMeasuresPrecision = sensorDataSettings.createSetting("Измерения окружающей среды, число точек после запятой", 2);
+    std::shared_ptr<DynamicSetting<int>> gyroMeasuresPrecision = sensorDataSettings.createSetting("Гироскоп, число точек после запятой", 2);
+    std::shared_ptr<DynamicSetting<int>> acceleroMeasuresPrecision = sensorDataSettings.createSetting("Акселерометр, число точек после запятой", 2);
+    std::shared_ptr<DynamicSetting<int>> magnetoMeasuresPrecision = sensorDataSettings.createSetting("Магнитометр, число точек после запятой", 2);
+
+    settingsFabrics.push_back(sensorDataSettings);
+    booleanSettingsFabrics.push_back(sensorDataSettingsBoolean);
+
+    MainWindow mainWindow(settingsFabrics, booleanSettingsFabrics);
 
     QMenuBar *menuBar = mainWindow.menuBar();
     QMenu *themeMenu = menuBar->addMenu("Интерфейс");
@@ -47,7 +72,6 @@ int main(int argc, char *argv[])
     QObject::connect(darkThemeAction, &QAction::triggered, [&app]() {
         loadStyleSheet(app, ":/gui/darktheme.qss");
     });
-
 
     PageRouter::instance().initialize(&mainWindow);
 

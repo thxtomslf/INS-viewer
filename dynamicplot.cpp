@@ -99,12 +99,18 @@ void DynamicPlot::addPoint(const QDateTime& time, double value)
     customPlot_->replot();
 }
 
-void DynamicPlot::plotSensorData(const QList<TimestampedSensorData> &dataList, std::function<double(const TimestampedSensorData&)> valueExtractor)
+void DynamicPlot::plotSensorData(
+    const QList<TimestampedSensorData> &dataList,
+    std::function<double(const TimestampedSensorData&)> valueExtractor,
+    std::function<bool(const TimestampedSensorData&)> shouldPlot)
 {
     QVector<double> timeData;
     QVector<double> valueData;
 
     for (const auto &data : dataList) {
+        if (!shouldPlot(data)) {
+            continue;
+        }
         double key = data.getTimestamp().toMSecsSinceEpoch() / 1000.0;
         double value = valueExtractor(data);
         timeData.append(key);

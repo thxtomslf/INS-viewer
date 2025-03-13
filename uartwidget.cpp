@@ -100,7 +100,7 @@ void UartWidget::loadConfigureUartPage() {
 
     ui->PortNameComboBox->setVisible(false);
     ui->portNameLabel->setVisible(false);
-    ui->reconfigureUartButton->setVisible(true);
+    ui->reconfigureUartButton->setVisible(isExpanded);
     ui->ConnectButton->setVisible(false);
 }
 
@@ -189,6 +189,7 @@ void UartWidget::onConnectButtonClicked() {
 
 void UartWidget::setExpanded(bool expanded)
 {
+    qDebug() << "set expanded: " << expanded;
     if (isExpanded != expanded) {
         isExpanded = expanded;
         updateWidgetState();

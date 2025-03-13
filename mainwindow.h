@@ -5,6 +5,7 @@
 #include "settingswidget.h"
 
 #include <QMainWindow>
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -15,7 +16,10 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(const DynamicSettingsFabric &settingsFabric, QWidget *parent = nullptr);
+    MainWindow(
+        const std::vector<DynamicSettingsFabric<int>> &fabrics,
+        const std::vector<DynamicSettingsFabric<bool>> &booleanFabrics,
+        QWidget *parent = nullptr);
     ~MainWindow();
 
     void setWidget(QWidget* widget);
@@ -27,7 +31,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    DynamicSettingsFabric settingsFabric;
+    std::vector<DynamicSettingsFabric<int>> fabrics;
+    std::vector<DynamicSettingsFabric<bool>> booleanFabrics;
     SettingsWidget *settingsWidget;
     bool currentWidgetChosen = false;
 };

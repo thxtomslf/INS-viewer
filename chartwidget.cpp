@@ -157,21 +157,30 @@ void ChartWidget::clearGraphs()
 
 void ChartWidget::updateGraphs(const SensorData &data, const QDateTime &timestamp)
 {
-    ui->temperatureChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(0));
-    ui->humidityChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(1));
-    ui->pressureChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(2));
+    // Проверяем, что данные не пусты
+    if (!data.getEnvironmentalMeasures().empty()) {
+        ui->temperatureChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(0));
+        ui->humidityChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(1));
+        ui->pressureChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(2));
+    }
 
-    ui->acceleroChartX->addPoint(timestamp, data.getAcceleroMeasures().at(0));
-    ui->acceleroChartY->addPoint(timestamp, data.getAcceleroMeasures().at(1));
-    ui->acceleroChartZ->addPoint(timestamp, data.getAcceleroMeasures().at(2));
+    if (!data.getAcceleroMeasures().empty()) {
+        ui->acceleroChartX->addPoint(timestamp, data.getAcceleroMeasures().at(0));
+        ui->acceleroChartY->addPoint(timestamp, data.getAcceleroMeasures().at(1));
+        ui->acceleroChartZ->addPoint(timestamp, data.getAcceleroMeasures().at(2));
+    }
 
-    ui->gyroChartX->addPoint(timestamp, data.getGyroMeasures().at(0));
-    ui->gyroChartY->addPoint(timestamp, data.getGyroMeasures().at(1));
-    ui->gyroChartZ->addPoint(timestamp, data.getGyroMeasures().at(2));
+    if (!data.getGyroMeasures().empty()) {
+        ui->gyroChartX->addPoint(timestamp, data.getGyroMeasures().at(0));
+        ui->gyroChartY->addPoint(timestamp, data.getGyroMeasures().at(1));
+        ui->gyroChartZ->addPoint(timestamp, data.getGyroMeasures().at(2));
+    }
 
-    ui->magnetoChartX->addPoint(timestamp, data.getMagnetoMeasures().at(0));
-    ui->magnetoChartY->addPoint(timestamp, data.getMagnetoMeasures().at(1));
-    ui->magnetoChartZ->addPoint(timestamp, data.getMagnetoMeasures().at(2));
+    if (!data.getMagnetoMeasures().empty()) {
+        ui->magnetoChartX->addPoint(timestamp, data.getMagnetoMeasures().at(0));
+        ui->magnetoChartY->addPoint(timestamp, data.getMagnetoMeasures().at(1));
+        ui->magnetoChartZ->addPoint(timestamp, data.getMagnetoMeasures().at(2));
+    }
 
     ui->writeSpeedLabel->setText(QString::number(data.getDataSendCount()));
     ui->readSpeedLabel->setText(QString::number(processor->getFrequency()));
@@ -421,51 +430,88 @@ void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end
 
     QList<TimestampedSensorData> dataList = this->csvDao->selectSensorData(start, end);
 
-    ui->temperatureChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
+    ui->temperatureChart->plotSensorData(dataList,
+     [](const TimestampedSensorData &data) {
         return data.getEnvironmentalMeasures().at(0);
+    },
+    [](const TimestampedSensorData &data) {
+        return !data.getEnvironmentalMeasures().empty();
     });
 
     ui->humidityChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getEnvironmentalMeasures().at(1);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getEnvironmentalMeasures().size() > 1;
     });
 
     ui->pressureChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getEnvironmentalMeasures().at(2);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getEnvironmentalMeasures().size() > 2;
     });
 
     ui->acceleroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getAcceleroMeasures().at(0);
+    },
+    [](const TimestampedSensorData &data) {
+        return !data.getAcceleroMeasures().empty();
     });
 
     ui->acceleroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getAcceleroMeasures().at(1);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getAcceleroMeasures().size() > 1;
     });
 
     ui->acceleroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getAcceleroMeasures().at(2);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getAcceleroMeasures().size() > 2;
     });
 
     ui->gyroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getGyroMeasures().at(0);
+    },
+    [](const TimestampedSensorData &data) {
+        return !data.getGyroMeasures().empty();
     });
 
     ui->gyroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getGyroMeasures().at(1);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getGyroMeasures().size() > 1;
     });
 
     ui->gyroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getGyroMeasures().at(2);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getGyroMeasures().size() > 2;
     });
 
     ui->magnetoChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getMagnetoMeasures().at(0);
+    },
+    [](const TimestampedSensorData &data) {
+        return !data.getMagnetoMeasures().empty();
     });
 
     ui->magnetoChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getMagnetoMeasures().at(1);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getMagnetoMeasures().size() > 1;
     });
 
     ui->magnetoChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
         return data.getMagnetoMeasures().at(2);
+    },
+    [](const TimestampedSensorData &data) {
+        return data.getMagnetoMeasures().size() > 2;
     });
 }
