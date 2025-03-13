@@ -41,6 +41,14 @@ private:
     void freeFile();
     void setMode(WidgetMode mode);
 
+    void initUartWidget();
+    void initRangeSlider();
+    void initSplitter();
+    void initToggleUartButton();
+    void initStartToggleButton();
+    void initCharts(std::shared_ptr<DynamicSetting<int>> plotBufferSize, std::shared_ptr<DynamicSetting<int>> plotSize);
+    void initStorageButtons();
+
 private slots:
     void showData();
     void stopShowData();
@@ -49,7 +57,6 @@ private slots:
     void saveToFile();
     void loadFromFile();
     void onUartConnectionChanged(bool connected);
-    void updateControlsVisibility(bool visible);
     void loadDataForPeriod(const QDateTime &start, const QDateTime &end);
 
 private:

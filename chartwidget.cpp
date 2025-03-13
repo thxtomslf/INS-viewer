@@ -21,40 +21,84 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
                          std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                          std::shared_ptr<DynamicSetting<int>> plotSize,
                          QWidget *parent)
-    : RoutableWidget(parent), processor(serial), ui(new Ui::ChartWidget), isUartWidgetVisible(true), isFileLoaded(false)
+    : RoutableWidget(parent), processor(serial), ui(new Ui::ChartWidget), isUartWidgetVisible(true)
 {
     ui->setupUi(this);
 
-    // Initialize UartWidget
-    uartWidget = new UartWidget(processor);
-    QVBoxLayout* uartLayout = new QVBoxLayout(ui->uartContainer);
-    uartLayout->addWidget(uartWidget);
-    uartLayout->setContentsMargins(0, 0, 0, 0);
+    initUartWidget();
+    initRangeSlider();
+    initSplitter();
+    initToggleUartButton();
 
+
+    // Connect signals
+    initStorageButtons();
+
+    // Setup charts
+    initCharts(plotBufferSize, plotSize);
+
+    // Connect ToggleButton signals
+    initStartToggleButton();
+}
+
+ChartWidget::~ChartWidget()
+{
+    stopShowData();
+    delete ui;
+}
+
+void ChartWidget::onPageHide() {
+
+}
+void ChartWidget::onPageShow(Page page) {
+
+}
+
+void ChartWidget::initRangeSlider() {
     rangeSlider = new RangeSlider(this);
     rangeSlider->setVisible(false); // Скрываем до загрузки файла
     ui->horizontalLayout->insertWidget(5, rangeSlider); // Добавляем слайдер в layout
 
-    ui->currentFileLabel->setVisible(false);
-
     connect(rangeSlider, &RangeSlider::rangeChanged, this, &ChartWidget::loadDataForPeriod);
+}
 
+void ChartWidget::initUartWidget() {
+    uartWidget = new UartWidget(processor);
+    QVBoxLayout* uartLayout = new QVBoxLayout(ui->uartContainer);
+    uartLayout->addWidget(uartWidget);
+    uartLayout->setContentsMargins(0, 0, 0, 0);
+}
+
+void ChartWidget::initSplitter() {
     // Set initial splitter sizes (1/3 for UART, 2/3 for charts)
     QList<int> sizes;
     sizes << width() / 3 << (width() * 2) / 3;
     ui->mainSplitter->setSizes(sizes);
+}
 
-    // Setup toggle button
+void ChartWidget::initToggleUartButton() {
     ui->toggleUartButton->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
     ui->toggleUartButton->setToolTip("Скрыть UART");
-
-    // Connect signals
     connect(ui->toggleUartButton, &QPushButton::clicked, this, &ChartWidget::toggleUartWidget);
+    connect(processor, &InsCommandProcessor::stopped, ui->toggleUartButton, &QPushButton::click);
+}
+
+void ChartWidget::initStartToggleButton() {
+    connect(ui->startToggleButton, &ToggleButton::startSignal, this, &ChartWidget::showData);
+    connect(ui->startToggleButton, &ToggleButton::pauseSignal, this, &ChartWidget::stopShowData);
+    connect(ui->startToggleButton, &ToggleButton::stopSignal, this, &ChartWidget::handleStopSignal);
+    connect(processor, &InsCommandProcessor::stopped, ui->startToggleButton, &ToggleButton::onPauseClicked);
+    ui->startToggleButton->setVisible(false);
+}
+
+void ChartWidget::initStorageButtons() {
     connect(processor, &InsCommandProcessor::connectionStatusChanged, this, &ChartWidget::onUartConnectionChanged);
     connect(ui->saveToFileButton, &QPushButton::clicked, this, &ChartWidget::saveToFile);
     connect(ui->loadButton, &QPushButton::clicked, this, &ChartWidget::loadFromFile);
 
-    // Setup charts
+}
+
+void ChartWidget::initCharts(std::shared_ptr<DynamicSetting<int>> plotBufferSize, std::shared_ptr<DynamicSetting<int>> plotSize) {
     ui->temperatureChart->setLabel("Температура, °C");
     ui->temperatureChart->setMaxBufferSize(plotBufferSize);
     ui->temperatureChart->setPlotSize(plotSize);
@@ -102,32 +146,6 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
     ui->magnetoChartZ->setLabel("Магнитная индукция Z, Гc");
     ui->magnetoChartZ->setMaxBufferSize(plotBufferSize);
     ui->magnetoChartZ->setPlotSize(plotSize);
-
-    // Connect ToggleButton signals
-    connect(ui->startToggleButton, &ToggleButton::startSignal, this, &ChartWidget::showData);
-    connect(ui->startToggleButton, &ToggleButton::pauseSignal, this, &ChartWidget::stopShowData);
-    connect(ui->startToggleButton, &ToggleButton::stopSignal, this, &ChartWidget::handleStopSignal);
-
-    connect(processor, &InsCommandProcessor::stopped, ui->startToggleButton, &ToggleButton::onPauseClicked);
-
-    // ui->startRangeWidget->setDateTime(QDateTime::currentDateTime());
-    // ui->endRangeWidget->setDateTime(QDateTime::currentDateTime().addMSecs(10000));
-
-    // Initialize controls visibility
-    updateControlsVisibility(false);
-}
-
-ChartWidget::~ChartWidget()
-{
-    stopShowData();
-    delete ui;
-}
-
-void ChartWidget::onPageHide() {
-
-}
-void ChartWidget::onPageShow(Page page) {
-
 }
 
 void ChartWidget::clearGraphs()
@@ -229,12 +247,8 @@ void ChartWidget::stopShowData()
 
 void ChartWidget::onUartConnectionChanged(bool connected)
 {
-    // Implementation of the method
-}
-
-void ChartWidget::updateControlsVisibility(bool visible)
-{
-    // Implementation of the method
+    ui->startToggleButton->setVisible(connected);
+    toggleUartWidget();
 }
 
 void ChartWidget::saveToFile()
@@ -352,7 +366,6 @@ void ChartWidget::loadFromFile() {
         minTimestamp = allData.first().getTimestamp();
         maxTimestamp = allData.last().getTimestamp();
 
-        isFileLoaded = true;
         // Устанавливаем диапазон слайдера
         rangeSlider->setRange(minTimestamp, maxTimestamp);
         rangeSlider->setVisible(true); // Показываем слайдер
@@ -393,18 +406,11 @@ void ChartWidget::freeFile() {
         this->csvDao = nullptr;
     }
 
-    isFileLoaded = false;
-
     rangeSlider->setVisible(false);
     ui->currentFileLabel->setVisible(false);
 }
 
 void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end) {
-    if (!isFileLoaded) {
-        qDebug() << "File wasn't loaded";
-        return;
-    }
-
     // Очищаем графики
     clearGraphs();
 
