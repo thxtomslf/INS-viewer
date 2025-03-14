@@ -28,6 +28,8 @@ private:
     QSlider *endSlider;
     QDateTime minTimestamp;
     QDateTime maxTimestamp;
+    QLabel *startLabel;
+    QLabel *endLabel;
 };
 
 #endif // RANGESLIDER_H

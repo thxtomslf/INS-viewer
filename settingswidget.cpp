@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QDebug>
+#include <unordered_map>
 
 SettingsWidget::SettingsWidget(
     const std::vector<DynamicSettingsFabric<int>> &numericFabrics,
@@ -36,19 +37,13 @@ void SettingsWidget::showEvent(QShowEvent *event)
     lineEdits_.clear();
     checkBoxes_.clear();
 
-    // Recreate layout contents for numeric settings
-    for (const auto &fabric : numericFabrics) {
-        // Add group name label
-        QLabel *groupLabel = new QLabel(QString::fromStdString(fabric.getGroupName()), this);
-        QFont font = groupLabel->font();
-        font.setBold(true);
-        groupLabel->setFont(font);
-        groupLabel->setStyleSheet("border: 1px solid white;"); // Add white border
-        formLayout->addRow(groupLabel);
+    // Group settings by group name
+    std::unordered_map<std::string, std::vector<std::pair<QString, QWidget*>>> groupedSettings;
 
+    // Collect numeric settings
+    for (const auto &fabric : numericFabrics) {
         for (const auto &name : fabric.getSettingNames()) {
             QString qName = QString::fromStdString(name);
-            QLabel *label = new QLabel(qName, this);
             QLineEdit *lineEdit = new QLineEdit(this);
 
             auto setting = fabric.getSetting(qName.toStdString());
@@ -56,24 +51,15 @@ void SettingsWidget::showEvent(QShowEvent *event)
                 lineEdit->setText(QString::number(setting->get()));
             }
 
-            formLayout->addRow(label, lineEdit);
-            lineEdits_[qName] = lineEdit;
+            groupedSettings[fabric.getGroupName()].emplace_back(qName, lineEdit);
+            lineEdits_[buildSettingName(QString::fromStdString(fabric.getGroupName()), qName)] = lineEdit;
         }
     }
 
-    // Recreate layout contents for boolean settings
+    // Collect boolean settings
     for (const auto &fabric : booleanFabrics) {
-        // Add group name label
-        QLabel *groupLabel = new QLabel(QString::fromStdString(fabric.getGroupName()), this);
-        QFont font = groupLabel->font();
-        font.setBold(true);
-        groupLabel->setFont(font);
-        groupLabel->setStyleSheet("border: 1px solid white;"); // Add white border
-        formLayout->addRow(groupLabel);
-
         for (const auto &name : fabric.getSettingNames()) {
             QString qName = QString::fromStdString(name);
-            QLabel *label = new QLabel(qName, this);
             QCheckBox *checkBox = new QCheckBox(this);
 
             auto setting = fabric.getSetting(qName.toStdString());
@@ -81,14 +67,33 @@ void SettingsWidget::showEvent(QShowEvent *event)
                 checkBox->setChecked(setting->get());
             }
 
-            formLayout->addRow(label, checkBox);
-            checkBoxes_[qName] = checkBox;
+            groupedSettings[fabric.getGroupName()].emplace_back(qName, checkBox);
+            checkBoxes_[buildSettingName(QString::fromStdString(fabric.getGroupName()), qName)] = checkBox;
+        }
+    }
+
+    // Add grouped settings to the layout
+    for (const auto &group : groupedSettings) {
+        QLabel *groupLabel = new QLabel(QString::fromStdString(group.first), this);
+        QFont font = groupLabel->font();
+        font.setBold(true);
+        groupLabel->setFont(font);
+        groupLabel->setStyleSheet("border: 1px solid white;"); // Add white border
+        formLayout->addRow(groupLabel);
+
+        for (const auto &setting : group.second) {
+            QLabel *label = new QLabel(setting.first, this);
+            formLayout->addRow(label, setting.second);
         }
     }
 
     QPushButton *submitButton = new QPushButton("Сохранить", this);
     connect(submitButton, &QPushButton::clicked, this, &SettingsWidget::applySettings);
     formLayout->addRow(submitButton);
+}
+
+QString SettingsWidget::buildSettingName(const QString &groupName, const QString &settingName) {
+    return groupName + "_" + settingName;
 }
 
 void SettingsWidget::applySettings()
@@ -100,7 +105,7 @@ void SettingsWidget::applySettings()
         int value = lineEdit->text().toInt(&ok);
         if (ok) {
             for (const auto &fabric : numericFabrics) {
-                auto setting = fabric.getSetting(name.toStdString());
+                auto setting = fabric.getSetting(name.split("_").last().toStdString());
                 if (setting) {
                     try {
                         setting->set(value);
@@ -118,7 +123,7 @@ void SettingsWidget::applySettings()
         QCheckBox *checkBox = it.value();
         bool value = checkBox->isChecked();
         for (const auto &fabric : booleanFabrics) {
-            auto setting = fabric.getSetting(name.toStdString());
+            auto setting = fabric.getSetting(name.split("_").last().toStdString());
             if (setting) {
                 setting->set(value);
                 break;

@@ -27,6 +27,9 @@ public:
 protected:
     virtual void showEvent(QShowEvent *event) override;
 
+private:
+    QString buildSettingName(const QString &groupName, const QString &settingName);
+
 private slots:
     void applySettings();
 

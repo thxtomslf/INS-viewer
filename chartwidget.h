@@ -3,6 +3,7 @@
 
 #include "inscommandprocessor.h"
 #include "routablewidget.cpp"
+#include "storagemanager.h"
 #include "uartwidget.h"
 
 #include <CsvSensorDataDAO.h>
@@ -38,7 +39,6 @@ public:
 private:
     void clearGraphs();
     void updateGraphs(const SensorData &data, const QDateTime &timstamp);
-    void freeFile();
     void setMode(WidgetMode mode);
 
     void initUartWidget();
@@ -63,7 +63,7 @@ private:
     InsCommandProcessor *processor;
     UartWidget *uartWidget;
     bool isUartWidgetVisible;
-    CsvSensorDataDAO *csvDao = nullptr;
+    FileStorageManager storageManager;
 
     Ui::ChartWidget *ui;
 

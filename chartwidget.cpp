@@ -262,22 +262,6 @@ void ChartWidget::onUartConnectionChanged(bool connected)
 
 void ChartWidget::saveToFile()
 {
-    qDebug() << "Starting saveToFile method...";
-
-    // Define the directory for saving files
-    QString experimentsDir = QDir::currentPath() + "/experiments"; // Исправлено название папки
-    QDir dir(experimentsDir);
-    if (!dir.exists()) {
-        qDebug() << "Creating experiments directory...";
-        dir.mkpath(".");
-    }
-
-    // Create a file name based on the current date and time with milliseconds
-    QString fileName = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss-zzz") + ".csv"; // Добавлены миллисекунды и улучшен формат
-    QString filePath = experimentsDir + "/" + fileName;
-    qDebug() << "File path:" << filePath;
-
-    CsvSensorDataDAO csvDao(filePath);
 
     // Collect data from all charts
     QList<TimestampedSensorData> allData;
@@ -340,33 +324,24 @@ void ChartWidget::saveToFile()
         allData.append(data);
     }
 
+    storageManager.openFileToSave();
     // Write data to CSV
     for (const auto& data : allData) {
-        csvDao.insertSensorData(data);
+        storageManager.saveData(data);
     }
 
-    qDebug() << "Data saved to" << filePath;
-    QMessageBox::information(this, "Статус записи", QString("Экперимент успешно сохранен по пути:\n %1").arg(filePath));
+    QMessageBox::information(this, "Статус записи", QString("Экперимент успешно сохранен по пути:\n %1").arg(storageManager.getSaveFileName()));
 }
 
 void ChartWidget::loadFromFile() {
-    QString filePath = QFileDialog::getOpenFileName(this, "Выберите CSV файл", QDir::currentPath(), "CSV Files (*.csv)");
-    if (filePath.isEmpty()) {
-        qDebug() << "File wasn't chosen";
-        return;
-    }
-
-    setMode(ChartWidget::WidgetMode::FILE);
-
     try {
-        if (this->csvDao) {
-            delete this->csvDao;
-            this->csvDao = nullptr;
-        }
-        this->csvDao = new CsvSensorDataDAO(filePath);
-
         // Получаем все данные из файла
-        QList<TimestampedSensorData> allData = csvDao->selectAllSensorData();
+        storageManager.loadFile(this);
+        if (storageManager.getReadFileName().isEmpty()) {
+            return;
+        }
+
+        QList<TimestampedSensorData> allData = storageManager.loadAllData();
         if (allData.isEmpty()) {
             throw std::runtime_error("Файл не содержит данных.");
         }
@@ -377,20 +352,21 @@ void ChartWidget::loadFromFile() {
 
         // Устанавливаем диапазон слайдера
         rangeSlider->setRange(minTimestamp, maxTimestamp);
-        rangeSlider->setVisible(true); // Показываем слайдер
 
         loadDataForPeriod(minTimestamp, maxTimestamp);
 
-        ui->currentFileLabel->setText(QFileInfo(filePath).fileName());
-
     } catch (const std::exception &e) {
         QMessageBox::critical(this, "Ошибка", QString("Не удалось загрузить файл: %1").arg(e.what()));
+        return;
     }
+
+    setMode(ChartWidget::WidgetMode::FILE);
 }
 
 void ChartWidget::setMode(WidgetMode mode) {
     if (mode == ChartWidget::WidgetMode::UART) {
-        freeFile();
+        rangeSlider->setVisible(false);
+        ui->currentFileLabel->setVisible(false);
         ui->label->setVisible(true);
         ui->label_2->setVisible(true);
         ui->readSpeedLabel->setVisible(true);
@@ -406,29 +382,20 @@ void ChartWidget::setMode(WidgetMode mode) {
         ui->currentFileLabel->setVisible(true);
 
         ui->startToggleButton->onPauseClicked();
+
+        ui->currentFileLabel->setText(storageManager.getReadFileName());
+
+        rangeSlider->setVisible(true); // Показываем слайдер
     }
 }
 
-void ChartWidget::freeFile() {
-    if (this->csvDao) {
-        delete this->csvDao;
-        this->csvDao = nullptr;
-    }
-
-    rangeSlider->setVisible(false);
-    ui->currentFileLabel->setVisible(false);
-}
 
 void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end) {
     // Очищаем графики
     clearGraphs();
 
-    // Загружаем данные для выбранного диапазона
-    if (!this->csvDao) {
-        QMessageBox::critical(this, "Ошибка", QString("Файл для отображение не выбран"));
-    }
 
-    QList<TimestampedSensorData> dataList = this->csvDao->selectSensorData(start, end);
+    QList<TimestampedSensorData> dataList = storageManager.loadDataForPeriod(start, end);
 
     ui->temperatureChart->plotSensorData(dataList,
      [](const TimestampedSensorData &data) {

@@ -6,9 +6,12 @@ RangeSlider::RangeSlider(QWidget *parent) : QWidget(parent) {
     startSlider = new QSlider(Qt::Horizontal, this);
     endSlider = new QSlider(Qt::Horizontal, this);
 
-    layout->addWidget(new QLabel("Начало", this));
+    startLabel = new QLabel(this);
+    endLabel = new QLabel(this);
+
+    layout->addWidget(startLabel);
     layout->addWidget(startSlider);
-    layout->addWidget(new QLabel("Конец", this));
+    layout->addWidget(endLabel);
     layout->addWidget(endSlider);
 
     startSlider->setRange(0, 100);
@@ -19,12 +22,20 @@ RangeSlider::RangeSlider(QWidget *parent) : QWidget(parent) {
 
     connect(startSlider, &QSlider::valueChanged, this, &RangeSlider::updateStartSlider);
     connect(endSlider, &QSlider::valueChanged, this, &RangeSlider::updateEndSlider);
+
+    updateStartSlider(startSlider->value());
+    updateEndSlider(endSlider->value());
+
+    endLabel->setAlignment(Qt::AlignRight); // Align the endLabel to the right
 }
 
 void RangeSlider::setRange(const QDateTime &min, const QDateTime &max) {
     minTimestamp = min;
     maxTimestamp = max;
-
+    startLabel->setText(getStartTimestamp().toString("yyyy-MM-dd HH:mm:ss"));
+    endLabel->setText(getEndTimestamp().toString("yyyy-MM-dd HH:mm:ss"));
+    startSlider->setValue(0);
+    endSlider->setValue(100);
 }
 
 QDateTime RangeSlider::getStartTimestamp() const {
@@ -43,6 +54,7 @@ void RangeSlider::updateStartSlider(int value) {
     if (value >= endSlider->value()) {
         startSlider->setValue(endSlider->value() - 1);
     }
+    startLabel->setText(getStartTimestamp().toString("yyyy-MM-dd HH:mm:ss"));
     emit rangeChanged(getStartTimestamp(), getEndTimestamp());
 }
 
@@ -50,5 +62,6 @@ void RangeSlider::updateEndSlider(int value) {
     if (value <= startSlider->value()) {
         endSlider->setValue(startSlider->value() + 1);
     }
+    endLabel->setText(getEndTimestamp().toString("yyyy-MM-dd HH:mm:ss"));
     emit rangeChanged(getStartTimestamp(), getEndTimestamp());
 }

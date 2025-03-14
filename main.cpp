@@ -34,25 +34,51 @@ int main(int argc, char *argv[])
 
     settingsFabrics.push_back(generalSettings);
 
-    DynamicSettingsFabric<int> sensorDataSettings;
-    DynamicSettingsFabric<bool> sensorDataSettingsBoolean;
+    std::string groupName = "Акселерометр";
+    DynamicSettingsFabric<int> accelerometrSettings;
+    DynamicSettingsFabric<bool> accelerometrSettingsBoolean;
+    accelerometrSettings.setGroupName(groupName);
+    accelerometrSettingsBoolean.setGroupName(groupName);
 
-    std::string groupName = "Настройки экспорта/импорта экспериментов";
-    sensorDataSettings.setGroupName(groupName);
-    sensorDataSettingsBoolean.setGroupName(groupName);
+    std::shared_ptr<DynamicSetting<bool>> isAcceleroMeasuresEnabled = accelerometrSettingsBoolean.createSetting("Вкл/выкл", true);
+    std::shared_ptr<DynamicSetting<int>> acceleroMeasuresPrecision = accelerometrSettings.createSetting("Число точек после запятой", 2);
 
-    std::shared_ptr<DynamicSetting<bool>> isEnvMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения окружающей среды", true);
-    std::shared_ptr<DynamicSetting<bool>> isGyroMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения гироскопа", true);
-    std::shared_ptr<DynamicSetting<bool>> isAcceleroMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения акселерометра", true);
-    std::shared_ptr<DynamicSetting<bool>> isMagnetoMeasuresEnabled = sensorDataSettingsBoolean.createSetting("Измерения магнитометра", true);
+    groupName = "Гироскоп";
+    DynamicSettingsFabric<int> gyroscopeSettings;
+    DynamicSettingsFabric<bool> gyroscopeSettingsBoolean;
+    gyroscopeSettings.setGroupName(groupName);
+    gyroscopeSettingsBoolean.setGroupName(groupName);   
 
-    std::shared_ptr<DynamicSetting<int>> envMeasuresPrecision = sensorDataSettings.createSetting("Измерения окружающей среды, число точек после запятой", 2);
-    std::shared_ptr<DynamicSetting<int>> gyroMeasuresPrecision = sensorDataSettings.createSetting("Гироскоп, число точек после запятой", 2);
-    std::shared_ptr<DynamicSetting<int>> acceleroMeasuresPrecision = sensorDataSettings.createSetting("Акселерометр, число точек после запятой", 2);
-    std::shared_ptr<DynamicSetting<int>> magnetoMeasuresPrecision = sensorDataSettings.createSetting("Магнитометр, число точек после запятой", 2);
+    std::shared_ptr<DynamicSetting<bool>> isGyroMeasuresEnabled = gyroscopeSettingsBoolean.createSetting("Вкл/выкл", true);
+    std::shared_ptr<DynamicSetting<int>> gyroMeasuresPrecision = gyroscopeSettings.createSetting("Число точек после запятой", 2);
 
-    settingsFabrics.push_back(sensorDataSettings);
-    booleanSettingsFabrics.push_back(sensorDataSettingsBoolean);
+    groupName = "Магнитометр";
+    DynamicSettingsFabric<int> magnetometerSettings;
+    DynamicSettingsFabric<bool> magnetometerSettingsBoolean;
+    magnetometerSettings.setGroupName(groupName);
+    magnetometerSettingsBoolean.setGroupName(groupName);
+
+    std::shared_ptr<DynamicSetting<bool>> isMagnetoMeasuresEnabled = magnetometerSettingsBoolean.createSetting("Вкл/выкл", true);
+    std::shared_ptr<DynamicSetting<int>> magnetoMeasuresPrecision = magnetometerSettings.createSetting("Число точек после запятой", 2);
+    
+    groupName = "Окружающая среда";
+    DynamicSettingsFabric<int> envSettings;
+    DynamicSettingsFabric<bool> envSettingsBoolean;
+    envSettings.setGroupName(groupName);
+    envSettingsBoolean.setGroupName(groupName);
+
+    std::shared_ptr<DynamicSetting<bool>> isEnvMeasuresEnabled = envSettingsBoolean.createSetting("Вкл/выкл", true);
+    std::shared_ptr<DynamicSetting<int>> envMeasuresPrecision = envSettings.createSetting("Число точек после запятой", 2);
+    
+    settingsFabrics.push_back(accelerometrSettings);
+    settingsFabrics.push_back(gyroscopeSettings);
+    settingsFabrics.push_back(magnetometerSettings);
+    settingsFabrics.push_back(envSettings);
+
+    booleanSettingsFabrics.push_back(accelerometrSettingsBoolean);
+    booleanSettingsFabrics.push_back(gyroscopeSettingsBoolean);
+    booleanSettingsFabrics.push_back(magnetometerSettingsBoolean);
+    booleanSettingsFabrics.push_back(envSettingsBoolean);
 
     MainWindow mainWindow(settingsFabrics, booleanSettingsFabrics);
 
