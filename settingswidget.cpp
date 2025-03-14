@@ -4,7 +4,6 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QDebug>
-#include <unordered_map>
 
 SettingsWidget::SettingsWidget(
     const std::vector<DynamicSettingsFabric<int>> &numericFabrics,
@@ -37,11 +36,12 @@ void SettingsWidget::showEvent(QShowEvent *event)
     lineEdits_.clear();
     checkBoxes_.clear();
 
-    // Group settings by group name
-    std::unordered_map<std::string, std::vector<std::pair<QString, QWidget*>>> groupedSettings;
+    // Group settings by group name while maintaining order
+    std::map<std::string, std::vector<std::pair<QString, QWidget*>>> groupedSettingsMap;
 
     // Collect numeric settings
     for (const auto &fabric : numericFabrics) {
+        std::vector<std::pair<QString, QWidget*>> &settings = groupedSettingsMap[fabric.getGroupName()];
         for (const auto &name : fabric.getSettingNames()) {
             QString qName = QString::fromStdString(name);
             QLineEdit *lineEdit = new QLineEdit(this);
@@ -51,13 +51,14 @@ void SettingsWidget::showEvent(QShowEvent *event)
                 lineEdit->setText(QString::number(setting->get()));
             }
 
-            groupedSettings[fabric.getGroupName()].emplace_back(qName, lineEdit);
+            settings.emplace_back(qName, lineEdit);
             lineEdits_[buildSettingName(QString::fromStdString(fabric.getGroupName()), qName)] = lineEdit;
         }
     }
 
     // Collect boolean settings
     for (const auto &fabric : booleanFabrics) {
+        std::vector<std::pair<QString, QWidget*>> &settings = groupedSettingsMap[fabric.getGroupName()];
         for (const auto &name : fabric.getSettingNames()) {
             QString qName = QString::fromStdString(name);
             QCheckBox *checkBox = new QCheckBox(this);
@@ -67,13 +68,13 @@ void SettingsWidget::showEvent(QShowEvent *event)
                 checkBox->setChecked(setting->get());
             }
 
-            groupedSettings[fabric.getGroupName()].emplace_back(qName, checkBox);
+            settings.emplace_back(qName, checkBox);
             checkBoxes_[buildSettingName(QString::fromStdString(fabric.getGroupName()), qName)] = checkBox;
         }
     }
 
     // Add grouped settings to the layout
-    for (const auto &group : groupedSettings) {
+    for (const auto &group : groupedSettingsMap) {
         QLabel *groupLabel = new QLabel(QString::fromStdString(group.first), this);
         QFont font = groupLabel->font();
         font.setBold(true);
@@ -104,15 +105,23 @@ void SettingsWidget::applySettings()
         bool ok;
         int value = lineEdit->text().toInt(&ok);
         if (ok) {
-            for (const auto &fabric : numericFabrics) {
+            for (auto &fabric : numericFabrics) {
+                if (fabric.getGroupName() != name.split("_").first().toStdString()) {
+                    continue;
+                }
+
                 auto setting = fabric.getSetting(name.split("_").last().toStdString());
                 if (setting) {
-                    try {
-                        setting->set(value);
-                    } catch (const std::invalid_argument &e) {
-                        qDebug() << "Invalid value for setting" << name << ":" << e.what();
+                    if (setting->get() != value) { // Check if the value has changed
+                        try {
+                            setting->set(value);
+                        } catch (const std::invalid_argument &e) {
+                            qDebug() << "Invalid value for setting" << name << ":" << e.what();
+                        }
                     }
                     break;
+                } else {
+                    qDebug() << "Setting" << name.toUtf8() << "not found";
                 }
             }
         }
@@ -122,11 +131,18 @@ void SettingsWidget::applySettings()
         const QString &name = it.key();
         QCheckBox *checkBox = it.value();
         bool value = checkBox->isChecked();
-        for (const auto &fabric : booleanFabrics) {
+        for (auto &fabric : booleanFabrics) {
+            if (fabric.getGroupName() != name.split("_").first().toStdString()) {
+                continue;
+            }
+
             auto setting = fabric.getSetting(name.split("_").last().toStdString());
             if (setting) {
-                setting->set(value);
-                break;
+                if (setting->get() != value) { // Check if the value has changed
+                    setting->set(value);
+                }
+            } else {
+                qDebug() << "Setting" << name.toUtf8() << "not found";
             }
         }
     }

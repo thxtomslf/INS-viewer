@@ -10,7 +10,25 @@
 
 class CsvSensorDataDAO : public ISensorDataDAO {
 public:
-    explicit CsvSensorDataDAO(const QString &filePath) : filePath(filePath), file(filePath) {
+    explicit CsvSensorDataDAO(
+        const QString &filePath,
+        bool envMeasuresEnabled = true,
+        int envMeasuresPrecision = 2,
+        bool gyroMeasuresEnabled = true,
+        int gyroMeasuresPrecision = 2,
+        bool acceleroMeasuresEnabled = true,
+        int acceleroMeasuresPrecision = 2,
+        bool magnetoMeasuresEnabled = true,
+        int magnetoMeasuresPrecision = 2
+    ) : filePath(filePath), file(filePath),
+        acceleroMeasuresEnabled(acceleroMeasuresEnabled),
+        acceleroMeasuresPrecision(acceleroMeasuresPrecision),
+        gyroMeasuresEnabled(gyroMeasuresEnabled), 
+        gyroMeasuresPrecision(gyroMeasuresPrecision),
+        magnetoMeasuresEnabled(magnetoMeasuresEnabled),
+        magnetoMeasuresPrecision(magnetoMeasuresPrecision),
+        envMeasuresEnabled(envMeasuresEnabled),
+        envMeasuresPrecision(envMeasuresPrecision) {
         // Открываем файл на чтение и запись
         if (!file.open(QIODevice::ReadWrite | QIODevice::Text)) {
             qDebug() << "Failed to open file for reading and writing:" << filePath;
@@ -22,14 +40,14 @@ public:
         QString header = in.readLine();
         if (!header.isEmpty()) {
             QStringList columns = header.split(',');
-            if (columns.size() != expectedColumnCount || !validateHeader(columns)) {
+            if (!validateHeader(columns)) {
                 qDebug() << "Invalid CSV header in file:" << filePath;
                 throw std::runtime_error("Invalid CSV header in file.");
             }
         } else {
             // Если файл пустой, записываем заголовок
             QTextStream out(&file);
-            out << "timestamp,temperature,humidity,pressure,gyro_x,gyro_y,gyro_z,accelero_x,accelero_y,accelero_z,magneto_x,magneto_y,magneto_z\n";
+            out << generateHeader() << "\n";
         }
     }
 
@@ -49,20 +67,33 @@ public:
         file.seek(file.size());
 
         QTextStream out(&file);
-        out << data.getTimestamp().toMSecsSinceEpoch() << "," // Записываем timestamp в формате epoch
-            << data.getEnvironmentalMeasures().at(0) << ","
-            << data.getEnvironmentalMeasures().at(1) << ","
-            << data.getEnvironmentalMeasures().at(2) << ","
-            << data.getGyroMeasures().at(0) << ","
-            << data.getGyroMeasures().at(1) << ","
-            << data.getGyroMeasures().at(2) << ","
-            << data.getAcceleroMeasures().at(0) << ","
-            << data.getAcceleroMeasures().at(1) << ","
-            << data.getAcceleroMeasures().at(2) << ","
-            << data.getMagnetoMeasures().at(0) << ","
-            << data.getMagnetoMeasures().at(1) << ","
-            << data.getMagnetoMeasures().at(2) << "\n";
+        out << data.getTimestamp().toMSecsSinceEpoch() << ","; // Записываем timestamp в формате epoch
 
+        if (envMeasuresEnabled) {
+            out << QString::number(data.getEnvironmentalMeasures().at(0), 'f', envMeasuresPrecision) << ","
+                << QString::number(data.getEnvironmentalMeasures().at(1), 'f', envMeasuresPrecision) << ","
+                << QString::number(data.getEnvironmentalMeasures().at(2), 'f', envMeasuresPrecision) << ",";
+        }
+
+        if (gyroMeasuresEnabled) {
+            out << data.getGyroMeasures().at(0) << ","
+                << data.getGyroMeasures().at(1) << ","
+                << data.getGyroMeasures().at(2) << ",";
+        }
+
+        if (acceleroMeasuresEnabled) {
+            out << data.getAcceleroMeasures().at(0) << ","
+                << data.getAcceleroMeasures().at(1) << ","
+                << data.getAcceleroMeasures().at(2) << ",";
+        }
+
+        if (magnetoMeasuresEnabled) {
+            out << data.getMagnetoMeasures().at(0) << ","
+                << data.getMagnetoMeasures().at(1) << ","
+                << data.getMagnetoMeasures().at(2);
+        }
+
+        out << "\n";
         return true;
     }
 
@@ -77,20 +108,38 @@ public:
         file.seek(0);
 
         QTextStream in(&file);
-        in.readLine(); // Пропускаем заголовок
+        QString header = in.readLine(); // Читаем заголовок
+        QStringList columns = header.split(',');
+
         while (!in.atEnd()) {
             QString line = in.readLine();
             QStringList fields = line.split(',');
+            if (!fields.isEmpty() && fields.last().isEmpty()) {
+                fields.removeLast();
+            }
 
-            if (fields.size() == expectedColumnCount) {
+            if (fields.size() == columns.size()) {
                 qint64 epochTime = fields[0].toLongLong(); // Считываем timestamp в формате epoch
                 QDateTime timestamp = QDateTime::fromMSecsSinceEpoch(epochTime); // Преобразуем в QDateTime
 
                 if (timestamp >= start && timestamp <= end) {
-                    QList<float> envMeasures = {fields[1].toFloat(), fields[2].toFloat(), fields[3].toFloat()};
-                    QList<int16_t> gyroMeasures = {static_cast<int16_t>(fields[4].toInt()), static_cast<int16_t>(fields[5].toInt()), static_cast<int16_t>(fields[6].toInt())};
-                    QList<int16_t> acceleroMeasures = {static_cast<int16_t>(fields[7].toInt()), static_cast<int16_t>(fields[8].toInt()), static_cast<int16_t>(fields[9].toInt())};
-                    QList<int16_t> magnetoMeasures = {static_cast<int16_t>(fields[10].toInt()), static_cast<int16_t>(fields[11].toInt()), static_cast<int16_t>(fields[12].toInt())};
+                    int index = 1;
+                    QList<float> envMeasures;
+                    if (columns.contains("temperature") && columns.contains("humidity") && columns.contains("pressure")) {
+                        envMeasures = {fields[index++].toFloat(), fields[index++].toFloat(), fields[index++].toFloat()};
+                    }
+                    QList<int16_t> gyroMeasures;
+                    if (columns.contains("gyro_x") && columns.contains("gyro_y") && columns.contains("gyro_z")) {
+                        gyroMeasures = {static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt())};
+                    }
+                    QList<int16_t> acceleroMeasures;
+                    if (columns.contains("accelero_x") && columns.contains("accelero_y") && columns.contains("accelero_z")) {
+                        acceleroMeasures = {static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt())};
+                    }
+                    QList<int16_t> magnetoMeasures;
+                    if (columns.contains("magneto_x") && columns.contains("magneto_y") && columns.contains("magneto_z")) {
+                        magnetoMeasures = {static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt())};
+                    }
 
                     TimestampedSensorData data(envMeasures, gyroMeasures, acceleroMeasures, magnetoMeasures, timestamp);
                     dataList.append(data);
@@ -112,19 +161,37 @@ public:
         file.seek(0);
 
         QTextStream in(&file);
-        in.readLine(); // Пропускаем заголовок
+        QString header = in.readLine(); // Читаем заголовок
+        QStringList columns = header.split(',');
+
         while (!in.atEnd()) {
             QString line = in.readLine();
             QStringList fields = line.split(',');
+            if (!fields.isEmpty() && fields.last().isEmpty()) {
+                fields.removeLast();
+            }
 
-            if (fields.size() == expectedColumnCount) {
+            if (fields.size() == columns.size()) {
                 qint64 epochTime = fields[0].toLongLong(); // Считываем timestamp в формате epoch
                 QDateTime timestamp = QDateTime::fromMSecsSinceEpoch(epochTime); // Преобразуем в QDateTime
 
-                QList<float> envMeasures = {fields[1].toFloat(), fields[2].toFloat(), fields[3].toFloat()};
-                QList<int16_t> gyroMeasures = {static_cast<int16_t>(fields[4].toInt()), static_cast<int16_t>(fields[5].toInt()), static_cast<int16_t>(fields[6].toInt())};
-                QList<int16_t> acceleroMeasures = {static_cast<int16_t>(fields[7].toInt()), static_cast<int16_t>(fields[8].toInt()), static_cast<int16_t>(fields[9].toInt())};
-                QList<int16_t> magnetoMeasures = {static_cast<int16_t>(fields[10].toInt()), static_cast<int16_t>(fields[11].toInt()), static_cast<int16_t>(fields[12].toInt())};
+                int index = 1;
+                QList<float> envMeasures;
+                if (columns.contains("temperature") && columns.contains("humidity") && columns.contains("pressure")) {
+                    envMeasures = {fields[index++].toFloat(), fields[index++].toFloat(), fields[index++].toFloat()};
+                }
+                QList<int16_t> gyroMeasures;
+                if (columns.contains("gyro_x") && columns.contains("gyro_y") && columns.contains("gyro_z")) {
+                    gyroMeasures = {static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt())};
+                }
+                QList<int16_t> acceleroMeasures;
+                if (columns.contains("accelero_x") && columns.contains("accelero_y") && columns.contains("accelero_z")) {
+                    acceleroMeasures = {static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt())};
+                }
+                QList<int16_t> magnetoMeasures;
+                if (columns.contains("magneto_x") && columns.contains("magneto_y") && columns.contains("magneto_z")) {
+                    magnetoMeasures = {static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt()), static_cast<int16_t>(fields[index++].toInt())};
+                }
 
                 TimestampedSensorData data(envMeasures, gyroMeasures, acceleroMeasures, magnetoMeasures, timestamp);
                 dataList.append(data);
@@ -137,14 +204,43 @@ public:
 private:
     QString filePath;
     QFile file;
-    const int expectedColumnCount = 13; // Обновлено в соответствии с количеством полей
+    bool envMeasuresEnabled;
+    int envMeasuresPrecision;
+    bool acceleroMeasuresEnabled;
+    int acceleroMeasuresPrecision;
+    bool gyroMeasuresEnabled;
+    int gyroMeasuresPrecision;
+    bool magnetoMeasuresEnabled;
+    int magnetoMeasuresPrecision;
 
-    bool validateHeader(const QStringList &columns) {
-        QStringList expectedHeaders = {"timestamp", "temperature", "humidity", "pressure",
-                                       "gyro_x", "gyro_y", "gyro_z",
-                                       "accelero_x", "accelero_y", "accelero_z",
-                                       "magneto_x", "magneto_y", "magneto_z"};
-        return columns == expectedHeaders;
+    QString generateHeader() const {
+        QStringList headers = {"timestamp"};
+        if (envMeasuresEnabled) {
+            headers << "temperature" << "humidity" << "pressure";
+        }
+        if (gyroMeasuresEnabled) {
+            headers << "gyro_x" << "gyro_y" << "gyro_z";
+        }
+        if (acceleroMeasuresEnabled) {
+            headers << "accelero_x" << "accelero_y" << "accelero_z";
+        }
+        if (magnetoMeasuresEnabled) {
+            headers << "magneto_x" << "magneto_y" << "magneto_z";
+        }
+        return headers.join(',');
+    }
+
+    bool validateHeader(const QStringList &columns) const {
+        if (!columns.contains("timestamp")) {
+            return false;
+        }
+        QStringList validHeaders = {"timestamp", "temperature", "humidity", "pressure", "gyro_x", "gyro_y", "gyro_z", "accelero_x", "accelero_y", "accelero_z", "magneto_x", "magneto_y", "magneto_z"};
+        for (const QString &column : columns) {
+            if (!validHeaders.contains(column)) {
+                return false;
+            }
+        }
+        return true;
     }
 };
 

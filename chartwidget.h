@@ -29,7 +29,8 @@ public:
 
     explicit ChartWidget(InsCommandProcessor *serial,
                          std::shared_ptr<DynamicSetting<int>> plotBufferSize,
-                         std::shared_ptr<DynamicSetting<int>> plotSize,
+                         std::shared_ptr<DynamicSetting<int>> plotSize, 
+                         FileStorageManager *storageManager,
                          QWidget *parent = nullptr);
     ~ChartWidget();
 
@@ -63,7 +64,7 @@ private:
     InsCommandProcessor *processor;
     UartWidget *uartWidget;
     bool isUartWidgetVisible;
-    FileStorageManager storageManager;
+    FileStorageManager *storageManager = nullptr;
 
     Ui::ChartWidget *ui;
 

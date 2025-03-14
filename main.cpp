@@ -102,7 +102,16 @@ int main(int argc, char *argv[])
     PageRouter::instance().initialize(&mainWindow);
 
     InsCommandProcessor *processor = new InsCommandProcessor();
-    ChartWidget *chartWidget = new ChartWidget(processor, plotBufferSize, plotSize);
+    FileStorageManager *fileStorageManager = new FileStorageManager(
+        isEnvMeasuresEnabled,
+        envMeasuresPrecision,
+        isGyroMeasuresEnabled,
+        gyroMeasuresPrecision,
+        isAcceleroMeasuresEnabled,
+        acceleroMeasuresPrecision,
+        isMagnetoMeasuresEnabled,
+        magnetoMeasuresPrecision);
+    ChartWidget *chartWidget = new ChartWidget(processor, plotBufferSize, plotSize, fileStorageManager);
 
     PageRouter::instance().registerWidget(Page::Graphics, chartWidget);
 

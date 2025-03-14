@@ -20,8 +20,9 @@
 ChartWidget::ChartWidget(InsCommandProcessor *serial,
                          std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                          std::shared_ptr<DynamicSetting<int>> plotSize,
+                         FileStorageManager *storageManager,
                          QWidget *parent)
-    : RoutableWidget(parent), processor(serial), ui(new Ui::ChartWidget), isUartWidgetVisible(true)
+    : RoutableWidget(parent), processor(serial), ui(new Ui::ChartWidget), isUartWidgetVisible(true), storageManager(storageManager)
 {
     ui->setupUi(this);
 
@@ -45,6 +46,7 @@ ChartWidget::~ChartWidget()
 {
     stopShowData();
     delete ui;
+    delete storageManager;
 }
 
 void ChartWidget::onPageHide() {
@@ -324,24 +326,24 @@ void ChartWidget::saveToFile()
         allData.append(data);
     }
 
-    storageManager.openFileToSave();
+    storageManager->openFileToSave();
     // Write data to CSV
     for (const auto& data : allData) {
-        storageManager.saveData(data);
+        storageManager->saveData(data);
     }
 
-    QMessageBox::information(this, "Статус записи", QString("Экперимент успешно сохранен по пути:\n %1").arg(storageManager.getSaveFileName()));
+    QMessageBox::information(this, "Статус записи", QString("Экперимент успешно сохранен по пути:\n %1").arg(storageManager->getSaveFileName()));
 }
 
 void ChartWidget::loadFromFile() {
     try {
         // Получаем все данные из файла
-        storageManager.loadFile(this);
-        if (storageManager.getReadFileName().isEmpty()) {
+        storageManager->loadFile(this);
+        if (storageManager->getReadFileName().isEmpty()) {
             return;
         }
 
-        QList<TimestampedSensorData> allData = storageManager.loadAllData();
+        QList<TimestampedSensorData> allData = storageManager->loadAllData();
         if (allData.isEmpty()) {
             throw std::runtime_error("Файл не содержит данных.");
         }
@@ -383,7 +385,7 @@ void ChartWidget::setMode(WidgetMode mode) {
 
         ui->startToggleButton->onPauseClicked();
 
-        ui->currentFileLabel->setText(storageManager.getReadFileName());
+        ui->currentFileLabel->setText(storageManager->getReadFileName());
 
         rangeSlider->setVisible(true); // Показываем слайдер
     }
@@ -395,7 +397,7 @@ void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end
     clearGraphs();
 
 
-    QList<TimestampedSensorData> dataList = storageManager.loadDataForPeriod(start, end);
+    QList<TimestampedSensorData> dataList = storageManager->loadDataForPeriod(start, end);
 
     ui->temperatureChart->plotSensorData(dataList,
      [](const TimestampedSensorData &data) {

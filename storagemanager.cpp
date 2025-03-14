@@ -2,7 +2,24 @@
 
 #include <qfiledialog.h>
 
-FileStorageManager::FileStorageManager() {
+FileStorageManager::FileStorageManager(
+    std::shared_ptr<DynamicSetting<bool>> isEnvMeasuresEnabled,
+    std::shared_ptr<DynamicSetting<int>> envMeasuresPrecision,
+    std::shared_ptr<DynamicSetting<bool>> isGyroMeasuresEnabled,
+    std::shared_ptr<DynamicSetting<int>> gyroMeasuresPrecision,
+    std::shared_ptr<DynamicSetting<bool>> isAcceleroMeasuresEnabled,
+    std::shared_ptr<DynamicSetting<int>> acceleroMeasuresPrecision,
+    std::shared_ptr<DynamicSetting<bool>> isMagnetoMeasuresEnabled,
+    std::shared_ptr<DynamicSetting<int>> magnetoMeasuresPrecision
+) {
+    this->isEnvMeasuresEnabled = isEnvMeasuresEnabled;
+    this->envMeasuresPrecision = envMeasuresPrecision;
+    this->isGyroMeasuresEnabled = isGyroMeasuresEnabled;
+    this->gyroMeasuresPrecision = gyroMeasuresPrecision;
+    this->isAcceleroMeasuresEnabled = isAcceleroMeasuresEnabled;
+    this->acceleroMeasuresPrecision = acceleroMeasuresPrecision;
+    this->isMagnetoMeasuresEnabled = isMagnetoMeasuresEnabled;
+    this->magnetoMeasuresPrecision = magnetoMeasuresPrecision;
     cachedData.clear();
 }
 
@@ -59,7 +76,16 @@ void FileStorageManager::openFileToSave() {
 
     freeFile(csvDaoToSave);
 
-    this->csvDaoToSave = new CsvSensorDataDAO(saveFilePath);
+    this->csvDaoToSave = new CsvSensorDataDAO(
+        saveFilePath,
+        isEnvMeasuresEnabled->get(),
+        envMeasuresPrecision->get(),
+        isGyroMeasuresEnabled->get(),
+        gyroMeasuresPrecision->get(),
+        isAcceleroMeasuresEnabled->get(),
+        acceleroMeasuresPrecision->get(),
+        isMagnetoMeasuresEnabled->get(),
+        magnetoMeasuresPrecision->get());
 }
 
 void FileStorageManager::saveData(const TimestampedSensorData &data) {
@@ -75,7 +101,7 @@ QString FileStorageManager::getReadFileName() const {
 }
 
 QString FileStorageManager::getSaveFileName() const {
-    return QFileInfo(saveFilePath).fileName();
+    return saveFilePath;
 }   
 
 void FileStorageManager::freeFile(CsvSensorDataDAO *dao) {
