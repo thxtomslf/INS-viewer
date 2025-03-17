@@ -74,7 +74,16 @@ void SettingsWidget::showEvent(QShowEvent *event)
     }
 
     // Add grouped settings to the layout
+    std::vector<std::pair<std::string, std::vector<std::pair<QString, QWidget*>>>> orderedGroups;
     for (const auto &group : groupedSettingsMap) {
+        if (group.first == "Общие настройки") {
+            orderedGroups.push_back(group); // Add "Общие настройки" at the end
+        } else {
+            orderedGroups.insert(orderedGroups.begin(), group); // Add other groups at the beginning
+        }
+    }
+
+    for (const auto &group : orderedGroups) {
         QLabel *groupLabel = new QLabel(QString::fromStdString(group.first), this);
         QFont font = groupLabel->font();
         font.setBold(true);
