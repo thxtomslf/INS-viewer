@@ -54,6 +54,8 @@ file(GLOB SRC
      "settingswidget.ui"
      "rangeslider.cpp"
      "rangeslider.h"
+     "DynamicPlotBuffer.cpp"
+     "DynamicPlotBuffer.h"
 )
 
 set(PROJECT_SOURCES

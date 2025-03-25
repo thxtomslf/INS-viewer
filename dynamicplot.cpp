@@ -4,15 +4,10 @@
 #include <QDateTime>
 
 DynamicPlot::DynamicPlot(QWidget *parent, std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting)
-    : QWidget(parent), plotBufferSize(maxBufferSizeSetting), headIndex_(0), currentSize_(0)
+    : QWidget(parent)
 {
-    if (plotBufferSize) {
-        maxBufferSize_ = plotBufferSize->get();
-        plotBufferSize.get()->setOnUpdateCallback([this](int newValue) {
-            onMaxBufferSizeChanged(newValue);
-        });
-    } else {
-        maxBufferSize_ = 500;
+    if (maxBufferSizeSetting) {
+        setMaxBufferSize(maxBufferSizeSetting);
     }
 
     customPlot_ = new QCustomPlot(this);
@@ -25,9 +20,6 @@ DynamicPlot::DynamicPlot(QWidget *parent, std::shared_ptr<DynamicSetting<int>> m
     QSharedPointer<QCPAxisTickerDateTime> dateTimeTicker(new QCPAxisTickerDateTime);
     dateTimeTicker->setDateTimeFormat("hh:mm:ss\ndd.MM.yyyy"); // Формат времени и даты
     customPlot_->xAxis->setTicker(dateTimeTicker);
-
-    timeData_.resize(maxBufferSize_);
-    valueData_.resize(maxBufferSize_);
 
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(customPlot_);
@@ -45,10 +37,8 @@ void DynamicPlot::setPlotSize(std::shared_ptr<DynamicSetting<int>> plotSize) {
 }
 
 void DynamicPlot::setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting) {
-    clear();
-    plotBufferSize = maxBufferSizeSetting;
-    maxBufferSize_ = plotBufferSize->get();
-    plotBufferSize.get()->setOnUpdateCallback([this](int newValue) {
+    buffer_.setMaxBufferSize(maxBufferSizeSetting);
+    maxBufferSizeSetting.get()->setOnUpdateCallback([this](int newValue) {
         onMaxBufferSizeChanged(newValue);
     });
 }
@@ -59,10 +49,7 @@ void DynamicPlot::clear()
     graph_->data()->clear();
 
     // Сброс буферов
-    timeData_.fill(0);
-    valueData_.fill(0);
-    headIndex_ = 0;
-    currentSize_ = 0;
+    buffer_.clear();
 
     // Перерисовка графика
     customPlot_->replot();
@@ -79,19 +66,10 @@ void DynamicPlot::setLabel(const QString &title) {
 
 void DynamicPlot::addPoint(const QDateTime& time, double value)
 {
-    double key = time.toMSecsSinceEpoch() / 1000.0;
+    buffer_.addPoint(time, value);
 
-    timeData_[headIndex_] = key;
-    valueData_[headIndex_] = value;
-
-    headIndex_ = (headIndex_ + 1) % maxBufferSize_; // Move head index to next position
-
-    if (currentSize_ < maxBufferSize_) {
-        ++currentSize_;
-    }
-
-    QVector<double> visibleTimeData = QVector<double>::fromList(timeData_.mid(0, currentSize_));
-    QVector<double> visibleValueData = QVector<double>::fromList(valueData_.mid(0, currentSize_));
+    QVector<double> visibleTimeData = buffer_.getVisibleTimeData();
+    QVector<double> visibleValueData = buffer_.getVisibleData();
 
     graph_->setData(visibleTimeData, visibleValueData);
     customPlot_->xAxis->setRange(visibleTimeData.first(), visibleTimeData.last());
@@ -127,18 +105,25 @@ void DynamicPlot::plotSensorData(
 
 void DynamicPlot::onMaxBufferSizeChanged(int newSize)
 {
-    maxBufferSize_ = newSize;
-    timeData_.resize(maxBufferSize_);
-    valueData_.resize(maxBufferSize_);
     clear();
 }
 
-QList<QPair<QDateTime, double>> DynamicPlot::getData() const
+QList<QPair<QDateTime, double>> DynamicPlot::getData()
 {
     QList<QPair<QDateTime, double>> dataList;
-    for (int i = 0; i < currentSize_; ++i) {
-        QDateTime time = QDateTime::fromMSecsSinceEpoch(timeData_[i] * 1000);
-        dataList.append(qMakePair(time, valueData_[i]));
+
+    if (!graph_ || !graph_->data()) {
+        return dataList;
     }
+
+    // Получаем данные из графа
+    const QCPDataContainer<QCPGraphData> *dataContainer = graph_->data().data();
+    for (auto it = dataContainer->constBegin(); it != dataContainer->constEnd(); ++it) {
+        double key = it->key;
+        double value = it->value;
+        QDateTime time = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(key * 1000));
+        dataList.append(qMakePair(time, value));
+    }
+
     return dataList;
 }

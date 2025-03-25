@@ -1,6 +1,7 @@
 #ifndef DYNAMICPLOT_H
 #define DYNAMICPLOT_H
 
+#include "DynamicPlotBuffer.h"
 #include "DynamicSetting.h"
 #include "extendedsensordata.h"
 
@@ -24,7 +25,7 @@ public:
         const QList<TimestampedSensorData> &dataList,
         std::function<double(const TimestampedSensorData&)> valueExtractor,
         std::function<bool(const TimestampedSensorData&)> shouldPlot = [](const TimestampedSensorData&) { return true; });
-    QList<QPair<QDateTime, double>> getData() const;
+    QList<QPair<QDateTime, double>> getData();
 
 private slots:
     void onMaxBufferSizeChanged(int newSize);
@@ -33,14 +34,7 @@ private:
     QCustomPlot *customPlot_;
     QCPGraph *graph_;
 
-    int maxBufferSize_;
-    int headIndex_;
-    int currentSize_;
-
-    QVector<double> timeData_;
-    QVector<double> valueData_;
-
-    std::shared_ptr<DynamicSetting<int>> plotBufferSize;
+    DynamicPlotBuffer buffer_;
     std::shared_ptr<DynamicSetting<int>> plotSize;
 };
 
