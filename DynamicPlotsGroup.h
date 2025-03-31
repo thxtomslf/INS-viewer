@@ -8,6 +8,7 @@
 #include <QVBoxLayout>
 #include <vector>
 #include <memory>
+#include <MultiLinePlot.h>
 
 class DynamicPlotsGroup : public QWidget
 {
@@ -15,8 +16,8 @@ class DynamicPlotsGroup : public QWidget
 
 public:
     enum DisplayMode {
-        SEPARATE_PLOTS // Режим отдельных графиков (текущая реализация)
-        // Здесь можно будет добавить другие режимы отображения
+        SEPARATE_PLOTS, // Режим отдельных графиков
+        COMBINED_PLOT   // Режим совмещенных графиков на одном полотне
     };
 
     explicit DynamicPlotsGroup(QWidget *parent = nullptr);
@@ -34,10 +35,9 @@ public:
             std::function<bool(const TimestampedSensorData&)>
         >> &extractors);
 
+    void addPoint(const QDateTime &timestamp, const std::vector<double> &values);
     QList<QList<QPair<QDateTime, double>>> getAllData() const;
     
-    void addPoint(const QDateTime &timestamp, const std::vector<double> &values);
-
 private:
     void setupLayout();
     void updateLayout();
@@ -47,6 +47,12 @@ private:
     QWidget *contentWidget_;
     QVBoxLayout *contentLayout_;
     std::vector<DynamicPlot*> plots_;
+    MultiLinePlot *multiLinePlot_;
+    
+    // Сохраняем настройки для каждого графика
+    std::vector<QString> plotLabels_;
+    std::vector<std::shared_ptr<DynamicSetting<int>>> plotBufferSizes_;
+    std::vector<std::shared_ptr<DynamicSetting<int>>> plotSizes_;
 };
 
 #endif // DYNAMICPLOTSGROUP_H 

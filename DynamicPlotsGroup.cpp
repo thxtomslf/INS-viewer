@@ -3,6 +3,7 @@
 DynamicPlotsGroup::DynamicPlotsGroup(QWidget *parent)
     : QWidget(parent)
     , currentMode_(DisplayMode::SEPARATE_PLOTS)
+    , multiLinePlot_(nullptr)
 {
     setupLayout();
 }
@@ -34,18 +35,27 @@ void DynamicPlotsGroup::addPlot(const QString &label,
                                std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                                std::shared_ptr<DynamicSetting<int>> plotSize)
 {
+    plotLabels_.push_back(label);
+    plotBufferSizes_.push_back(plotBufferSize);
+    plotSizes_.push_back(plotSize);
+
     auto plot = new DynamicPlot(contentWidget_, plotBufferSize);
     plot->setPlotSize(plotSize);
     plot->setLabel(label);
     
     plots_.push_back(plot);
-    contentLayout_->addWidget(plot);
+    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
+        contentLayout_->addWidget(plot);
+    }
 }
 
 void DynamicPlotsGroup::clear()
 {
     for (auto plot : plots_) {
         plot->clear();
+    }
+    if (multiLinePlot_) {
+        multiLinePlot_->clear();
     }
 }
 
@@ -56,43 +66,67 @@ void DynamicPlotsGroup::plotSensorData(
         std::function<bool(const TimestampedSensorData&)>
     >> &extractors)
 {
-    if (extractors.size() != plots_.size()) {
-        qDebug() << "Error: Number of extractors doesn't match number of plots";
-        return;
-    }
-
-    for (size_t i = 0; i < plots_.size(); ++i) {
-        plots_[i]->plotSensorData(dataList, extractors[i].first, extractors[i].second);
+    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
+        for (size_t i = 0; i < plots_.size() && i < extractors.size(); ++i) {
+            plots_[i]->plotSensorData(dataList, extractors[i].first, extractors[i].second);
+        }
+    } else if (currentMode_ == DisplayMode::COMBINED_PLOT && multiLinePlot_) {
+        multiLinePlot_->plotSensorData(dataList, extractors);
     }
 }
 
 QList<QList<QPair<QDateTime, double>>> DynamicPlotsGroup::getAllData() const
 {
-    QList<QList<QPair<QDateTime, double>>> allData;
-    for (const auto plot : plots_) {
-        allData.append(plot->getData());
+    if (currentMode_ == DisplayMode::COMBINED_PLOT && multiLinePlot_) {
+        return multiLinePlot_->getAllData();
     }
-    return allData;
+
+    QList<QList<QPair<QDateTime, double>>> result;
+    for (const auto& plot : plots_) {
+        result.append(plot->getData());
+    }
+    return result;
 }
 
 void DynamicPlotsGroup::updateLayout()
 {
-    // В будущем здесь будет логика для разных режимов отображения
+    QLayoutItem *child;
+    while ((child = contentLayout_->takeAt(0)) != nullptr) {
+        if (child->widget() != nullptr) {
+            child->widget()->setParent(nullptr);
+        }
+        delete child;
+    }
+
     switch (currentMode_) {
         case DisplayMode::SEPARATE_PLOTS:
-            // Текущая реализация уже соответствует этому режиму
+            if (multiLinePlot_ != nullptr) {
+                multiLinePlot_->setParent(nullptr);
+                delete multiLinePlot_;
+                multiLinePlot_ = nullptr;
+            }
+            for (auto plot : plots_) {
+                contentLayout_->addWidget(plot);
+            }
+            break;
+
+        case DisplayMode::COMBINED_PLOT:
+            multiLinePlot_ = new MultiLinePlot(contentWidget_);
+            for (size_t i = 0; i < plots_.size(); ++i) {
+                multiLinePlot_->addGraph(plotLabels_[i], plotBufferSizes_[i], plotSizes_[i]);
+            }
+            contentLayout_->addWidget(multiLinePlot_);
             break;
     }
 }
 
 void DynamicPlotsGroup::addPoint(const QDateTime &timestamp, const std::vector<double> &values)
 {
-    if (values.size() != plots_.size()) {
-        qDebug() << "Error: Number of values doesn't match number of plots";
-        return;
+    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
+        for (size_t i = 0; i < plots_.size() && i < values.size(); ++i) {
+            plots_[i]->addPoint(timestamp, values[i]);
+        }
+    } else if (currentMode_ == DisplayMode::COMBINED_PLOT && multiLinePlot_) {
+        multiLinePlot_->addPoint(timestamp, values);
     }
-
-    for (size_t i = 0; i < plots_.size(); ++i) {
-        plots_[i]->addPoint(timestamp, values[i]);
-    }
-} 
+}
