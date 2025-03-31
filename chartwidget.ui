@@ -142,7 +142,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="tabEnvironment">
           <attribute name="title">
@@ -163,17 +163,7 @@
                 <height>185</height>
                </rect>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutEnv_2">
-               <item>
-                <widget class="DynamicPlot" name="humidityChart" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="pressureChart" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="temperatureChart" native="true"/>
-               </item>
-              </layout>
+              <layout class="QVBoxLayout" name="verticalLayoutEnv_2"/>
              </widget>
             </widget>
            </item>
@@ -198,17 +188,7 @@
                 <height>185</height>
                </rect>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutAccelero_2">
-               <item>
-                <widget class="DynamicPlot" name="acceleroChartX" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="acceleroChartY" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="acceleroChartZ" native="true"/>
-               </item>
-              </layout>
+              <layout class="QVBoxLayout" name="verticalLayoutAccelero_2"/>
              </widget>
             </widget>
            </item>
@@ -233,17 +213,7 @@
                 <height>185</height>
                </rect>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutGyro_2">
-               <item>
-                <widget class="DynamicPlot" name="gyroChartX" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="gyroChartY" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="gyroChartZ" native="true"/>
-               </item>
-              </layout>
+              <layout class="QVBoxLayout" name="verticalLayoutGyro_2"/>
              </widget>
             </widget>
            </item>
@@ -268,17 +238,7 @@
                 <height>185</height>
                </rect>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutMagneto_2">
-               <item>
-                <widget class="DynamicPlot" name="magnetoChartX" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="magnetoChartY" native="true"/>
-               </item>
-               <item>
-                <widget class="DynamicPlot" name="magnetoChartZ" native="true"/>
-               </item>
-              </layout>
+              <layout class="QVBoxLayout" name="verticalLayoutMagneto_2"/>
              </widget>
             </widget>
            </item>
@@ -307,12 +267,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>DynamicPlot</class>
-   <extends>QWidget</extends>
-   <header>dynamicplot.h</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>ToggleButton</class>
    <extends>QWidget</extends>

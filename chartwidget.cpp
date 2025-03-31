@@ -5,6 +5,7 @@
 #include "comand/commandresponse.h"
 #include "pagerouter.h"
 #include "uartwidget.h"
+#include "dynamicplotsgroup.h"
 
 #include <QVBoxLayout>
 #include <QDateTime>
@@ -100,94 +101,79 @@ void ChartWidget::initStorageButtons() {
 
 }
 
-void ChartWidget::initCharts(std::shared_ptr<DynamicSetting<int>> plotBufferSize, std::shared_ptr<DynamicSetting<int>> plotSize) {
-    ui->temperatureChart->setLabel("Температура, °C");
-    ui->temperatureChart->setMaxBufferSize(plotBufferSize);
-    ui->temperatureChart->setPlotSize(plotSize);
+void ChartWidget::initCharts(std::shared_ptr<DynamicSetting<int>> plotBufferSize, std::shared_ptr<DynamicSetting<int>> plotSize)
+{
+    // Создаем группы графиков
+    envGroup_ = new DynamicPlotsGroup(this);
+    envGroup_->addPlot("Температура, °C", plotBufferSize, plotSize);
+    envGroup_->addPlot("Влажность, %", plotBufferSize, plotSize);
+    envGroup_->addPlot("Давление, Па", plotBufferSize, plotSize);
+    ui->verticalLayoutEnv_2->addWidget(envGroup_);
 
-    ui->humidityChart->setLabel("Влажность, %");
-    ui->humidityChart->setMaxBufferSize(plotBufferSize);
-    ui->humidityChart->setPlotSize(plotSize);
+    acceleroGroup_ = new DynamicPlotsGroup(this);
+    acceleroGroup_->addPlot("Линейное ускорение X, м/c^2", plotBufferSize, plotSize);
+    acceleroGroup_->addPlot("Линейное ускорение Y, м/c^2", plotBufferSize, plotSize);
+    acceleroGroup_->addPlot("Линейное ускорение Z, м/c^2", plotBufferSize, plotSize);
+    ui->verticalLayoutAccelero_2->addWidget(acceleroGroup_);
 
-    ui->pressureChart->setLabel("Давление, Па");
-    ui->pressureChart->setMaxBufferSize(plotBufferSize);
-    ui->pressureChart->setPlotSize(plotSize);
+    gyroGroup_ = new DynamicPlotsGroup(this);
+    gyroGroup_->addPlot("Угловая скорость X, рад/c", plotBufferSize, plotSize);
+    gyroGroup_->addPlot("Угловая скорость Y, рад/c", plotBufferSize, plotSize);
+    gyroGroup_->addPlot("Угловая скорость Z, рад/c", plotBufferSize, plotSize);
+    ui->verticalLayoutGyro_2->addWidget(gyroGroup_);
 
-    ui->acceleroChartX->setLabel("Линейное ускорение X, м/c^2");
-    ui->acceleroChartX->setMaxBufferSize(plotBufferSize);
-    ui->acceleroChartX->setPlotSize(plotSize);
-
-    ui->acceleroChartY->setLabel("Линейное ускорение Y, м/c^2");
-    ui->acceleroChartY->setMaxBufferSize(plotBufferSize);
-    ui->acceleroChartY->setPlotSize(plotSize);
-
-    ui->acceleroChartZ->setLabel("Линейное ускорение Z, м/c^2");
-    ui->acceleroChartZ->setMaxBufferSize(plotBufferSize);
-    ui->acceleroChartZ->setPlotSize(plotSize);
-
-    ui->gyroChartX->setLabel("Угловая скорость X, рад/c");
-    ui->gyroChartX->setMaxBufferSize(plotBufferSize);
-    ui->gyroChartX->setPlotSize(plotSize);
-
-    ui->gyroChartY->setLabel("Угловая скорость Y, рад/c");
-    ui->gyroChartY->setMaxBufferSize(plotBufferSize);
-    ui->gyroChartY->setPlotSize(plotSize);
-
-    ui->gyroChartZ->setLabel("Угловая скорость Z, рад/c");
-    ui->gyroChartZ->setMaxBufferSize(plotBufferSize);
-    ui->gyroChartZ->setPlotSize(plotSize);
-
-    ui->magnetoChartX->setLabel("Магнитная индукция X, Гc");
-    ui->magnetoChartX->setMaxBufferSize(plotBufferSize);
-    ui->magnetoChartX->setPlotSize(plotSize);
-
-    ui->magnetoChartY->setLabel("Магнитная индукция Y, Гc");
-    ui->magnetoChartY->setMaxBufferSize(plotBufferSize);
-    ui->magnetoChartY->setPlotSize(plotSize);
-
-    ui->magnetoChartZ->setLabel("Магнитная индукция Z, Гc");
-    ui->magnetoChartZ->setMaxBufferSize(plotBufferSize);
-    ui->magnetoChartZ->setPlotSize(plotSize);
+    magnetoGroup_ = new DynamicPlotsGroup(this);
+    magnetoGroup_->addPlot("Магнитная индукция X, Гc", plotBufferSize, plotSize);
+    magnetoGroup_->addPlot("Магнитная индукция Y, Гc", plotBufferSize, plotSize);
+    magnetoGroup_->addPlot("Магнитная индукция Z, Гc", plotBufferSize, plotSize);
+    ui->verticalLayoutMagneto_2->addWidget(magnetoGroup_);
 }
 
 void ChartWidget::clearGraphs()
 {
-    for (auto plot : findChildren<DynamicPlot*>()) {
-        plot->clear();
-    }
+    envGroup_->clear();
+    acceleroGroup_->clear();
+    gyroGroup_->clear();
+    magnetoGroup_->clear();
 }
 
 void ChartWidget::updateGraphs(const SensorData &data, const QDateTime &timestamp)
 {
-    // Проверяем, что данные не пусты
     if (!data.getEnvironmentalMeasures().empty()) {
-        ui->temperatureChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(0));
-        ui->humidityChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(1));
-        ui->pressureChart->addPoint(timestamp, data.getEnvironmentalMeasures().at(2));
+        std::vector<double> envValues;
+        for (const auto &value : data.getEnvironmentalMeasures()) {
+            envValues.push_back(value);
+        }
+        envGroup_->addPoint(timestamp, envValues);
     }
 
     if (!data.getAcceleroMeasures().empty()) {
-        ui->acceleroChartX->addPoint(timestamp, data.getAcceleroMeasures().at(0));
-        ui->acceleroChartY->addPoint(timestamp, data.getAcceleroMeasures().at(1));
-        ui->acceleroChartZ->addPoint(timestamp, data.getAcceleroMeasures().at(2));
+        std::vector<double> acceleroValues;
+        for (const auto &value : data.getAcceleroMeasures()) {
+            acceleroValues.push_back(value);
+        }
+        acceleroGroup_->addPoint(timestamp, acceleroValues);
     }
 
     if (!data.getGyroMeasures().empty()) {
-        ui->gyroChartX->addPoint(timestamp, data.getGyroMeasures().at(0));
-        ui->gyroChartY->addPoint(timestamp, data.getGyroMeasures().at(1));
-        ui->gyroChartZ->addPoint(timestamp, data.getGyroMeasures().at(2));
+        std::vector<double> gyroValues;
+        for (const auto &value : data.getGyroMeasures()) {
+            gyroValues.push_back(value);
+        }
+        gyroGroup_->addPoint(timestamp, gyroValues);
     }
 
     if (!data.getMagnetoMeasures().empty()) {
-        ui->magnetoChartX->addPoint(timestamp, data.getMagnetoMeasures().at(0));
-        ui->magnetoChartY->addPoint(timestamp, data.getMagnetoMeasures().at(1));
-        ui->magnetoChartZ->addPoint(timestamp, data.getMagnetoMeasures().at(2));
+        std::vector<double> magnetoValues;
+        for (const auto &value : data.getMagnetoMeasures()) {
+            magnetoValues.push_back(value);
+        }
+        magnetoGroup_->addPoint(timestamp, magnetoValues);
     }
 
     ui->writeSpeedLabel->setText(QString::number(data.getDataSendCount()));
     ui->readSpeedLabel->setText(QString::number(processor->getFrequency()));
 }
-
 
 void ChartWidget::toggleUartWidget()
 {
@@ -269,24 +255,24 @@ void ChartWidget::saveToFile()
     QList<TimestampedSensorData> allData;
 
     // Environment data
-    QList<QPair<QDateTime, double>> temperatureData = ui->temperatureChart->getData();
-    QList<QPair<QDateTime, double>> humidityData = ui->humidityChart->getData();
-    QList<QPair<QDateTime, double>> pressureData = ui->pressureChart->getData();
+    QList<QPair<QDateTime, double>> temperatureData = envGroup_->getAllData().at(0);
+    QList<QPair<QDateTime, double>> humidityData = envGroup_->getAllData().at(1);
+    QList<QPair<QDateTime, double>> pressureData = envGroup_->getAllData().at(2);
 
     // Acceleration data
-    QList<QPair<QDateTime, double>> acceleroXData = ui->acceleroChartX->getData();
-    QList<QPair<QDateTime, double>> acceleroYData = ui->acceleroChartY->getData();
-    QList<QPair<QDateTime, double>> acceleroZData = ui->acceleroChartZ->getData();
+    QList<QPair<QDateTime, double>> acceleroXData = acceleroGroup_->getAllData().at(0);
+    QList<QPair<QDateTime, double>> acceleroYData = acceleroGroup_->getAllData().at(1);
+    QList<QPair<QDateTime, double>> acceleroZData = acceleroGroup_->getAllData().at(2);
 
     // Gyroscope data
-    QList<QPair<QDateTime, double>> gyroXData = ui->gyroChartX->getData();
-    QList<QPair<QDateTime, double>> gyroYData = ui->gyroChartY->getData();
-    QList<QPair<QDateTime, double>> gyroZData = ui->gyroChartZ->getData();
+    QList<QPair<QDateTime, double>> gyroXData = gyroGroup_->getAllData().at(0);
+    QList<QPair<QDateTime, double>> gyroYData = gyroGroup_->getAllData().at(1);
+    QList<QPair<QDateTime, double>> gyroZData = gyroGroup_->getAllData().at(2);
 
     // Magnetometer data
-    QList<QPair<QDateTime, double>> magnetoXData = ui->magnetoChartX->getData();
-    QList<QPair<QDateTime, double>> magnetoYData = ui->magnetoChartY->getData();
-    QList<QPair<QDateTime, double>> magnetoZData = ui->magnetoChartZ->getData();
+    QList<QPair<QDateTime, double>> magnetoXData = magnetoGroup_->getAllData().at(0);
+    QList<QPair<QDateTime, double>> magnetoYData = magnetoGroup_->getAllData().at(1);
+    QList<QPair<QDateTime, double>> magnetoZData = magnetoGroup_->getAllData().at(2);
 
     // Check if all data lists have the same size
     if (temperatureData.size() != humidityData.size() || temperatureData.size() != pressureData.size() ||
@@ -391,96 +377,73 @@ void ChartWidget::setMode(WidgetMode mode) {
     }
 }
 
+// TODO: make DynamicPlotsGroup, который будет из себя представлять scroll area внутри которого будет
+// лэйаут с графиками. у него должен быть метод setMode() с енамом.
+// внутри надо насоздавать DynamicPlotBuffer для каждого полученного типа графа
+// затем надо создать под них виджеты для отображения и передавать туда DynamicPlotBuffer:
+// для первого режима надо создать три DynamicPlot и положить их в vertical layout - и это в мапу, где ключ - это режим
+// для второго режима надо содать один DynamicPlot с тремя графиками (создать отдельный класс на основе DynamicPlot)
+// для третьего - создать таблицу (отдельный класс)
 
+// внутри stacked widget добавить кнопки и в этом классе добавиь их обработчики
 void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end) {
-    // Очищаем графики
     clearGraphs();
-
 
     QList<TimestampedSensorData> dataList = storageManager->loadDataForPeriod(start, end);
 
-    ui->temperatureChart->plotSensorData(dataList,
-     [](const TimestampedSensorData &data) {
-        return data.getEnvironmentalMeasures().at(0);
-    },
-    [](const TimestampedSensorData &data) {
-        return !data.getEnvironmentalMeasures().empty();
-    });
+    // Environmental data
+    std::vector<std::pair<
+        std::function<double(const TimestampedSensorData&)>,
+        std::function<bool(const TimestampedSensorData&)>
+    >> envExtractors = {
+        {[](const TimestampedSensorData &d) { return d.getEnvironmentalMeasures().at(0); },
+         [](const TimestampedSensorData &d) { return !d.getEnvironmentalMeasures().empty(); }},
+        {[](const TimestampedSensorData &d) { return d.getEnvironmentalMeasures().at(1); },
+         [](const TimestampedSensorData &d) { return d.getEnvironmentalMeasures().size() > 1; }},
+        {[](const TimestampedSensorData &d) { return d.getEnvironmentalMeasures().at(2); },
+         [](const TimestampedSensorData &d) { return d.getEnvironmentalMeasures().size() > 2; }}
+    };
+    envGroup_->plotSensorData(dataList, envExtractors);
 
-    ui->humidityChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getEnvironmentalMeasures().at(1);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getEnvironmentalMeasures().size() > 1;
-    });
+    // Accelerometer data
+    std::vector<std::pair<
+        std::function<double(const TimestampedSensorData&)>,
+        std::function<bool(const TimestampedSensorData&)>
+    >> acceleroExtractors = {
+        {[](const TimestampedSensorData &d) { return d.getAcceleroMeasures().at(0); },
+         [](const TimestampedSensorData &d) { return !d.getAcceleroMeasures().empty(); }},
+        {[](const TimestampedSensorData &d) { return d.getAcceleroMeasures().at(1); },
+         [](const TimestampedSensorData &d) { return d.getAcceleroMeasures().size() > 1; }},
+        {[](const TimestampedSensorData &d) { return d.getAcceleroMeasures().at(2); },
+         [](const TimestampedSensorData &d) { return d.getAcceleroMeasures().size() > 2; }}
+    };
+    acceleroGroup_->plotSensorData(dataList, acceleroExtractors);
 
-    ui->pressureChart->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getEnvironmentalMeasures().at(2);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getEnvironmentalMeasures().size() > 2;
-    });
+    // Gyroscope data
+    std::vector<std::pair<
+        std::function<double(const TimestampedSensorData&)>,
+        std::function<bool(const TimestampedSensorData&)>
+    >> gyroExtractors = {
+        {[](const TimestampedSensorData &d) { return d.getGyroMeasures().at(0); },
+         [](const TimestampedSensorData &d) { return !d.getGyroMeasures().empty(); }},
+        {[](const TimestampedSensorData &d) { return d.getGyroMeasures().at(1); },
+         [](const TimestampedSensorData &d) { return d.getGyroMeasures().size() > 1; }},
+        {[](const TimestampedSensorData &d) { return d.getGyroMeasures().at(2); },
+         [](const TimestampedSensorData &d) { return d.getGyroMeasures().size() > 2; }}
+    };
+    gyroGroup_->plotSensorData(dataList, gyroExtractors);
 
-    ui->acceleroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getAcceleroMeasures().at(0);
-    },
-    [](const TimestampedSensorData &data) {
-        return !data.getAcceleroMeasures().empty();
-    });
-
-    ui->acceleroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getAcceleroMeasures().at(1);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getAcceleroMeasures().size() > 1;
-    });
-
-    ui->acceleroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getAcceleroMeasures().at(2);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getAcceleroMeasures().size() > 2;
-    });
-
-    ui->gyroChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getGyroMeasures().at(0);
-    },
-    [](const TimestampedSensorData &data) {
-        return !data.getGyroMeasures().empty();
-    });
-
-    ui->gyroChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getGyroMeasures().at(1);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getGyroMeasures().size() > 1;
-    });
-
-    ui->gyroChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getGyroMeasures().at(2);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getGyroMeasures().size() > 2;
-    });
-
-    ui->magnetoChartX->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getMagnetoMeasures().at(0);
-    },
-    [](const TimestampedSensorData &data) {
-        return !data.getMagnetoMeasures().empty();
-    });
-
-    ui->magnetoChartY->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getMagnetoMeasures().at(1);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getMagnetoMeasures().size() > 1;
-    });
-
-    ui->magnetoChartZ->plotSensorData(dataList, [](const TimestampedSensorData &data) {
-        return data.getMagnetoMeasures().at(2);
-    },
-    [](const TimestampedSensorData &data) {
-        return data.getMagnetoMeasures().size() > 2;
-    });
+    // Magnetometer data
+    std::vector<std::pair<
+        std::function<double(const TimestampedSensorData&)>,
+        std::function<bool(const TimestampedSensorData&)>
+    >> magnetoExtractors = {
+        {[](const TimestampedSensorData &d) { return d.getMagnetoMeasures().at(0); },
+         [](const TimestampedSensorData &d) { return !d.getMagnetoMeasures().empty(); }},
+        {[](const TimestampedSensorData &d) { return d.getMagnetoMeasures().at(1); },
+         [](const TimestampedSensorData &d) { return d.getMagnetoMeasures().size() > 1; }},
+        {[](const TimestampedSensorData &d) { return d.getMagnetoMeasures().at(2); },
+         [](const TimestampedSensorData &d) { return d.getMagnetoMeasures().size() > 2; }}
+    };
+    magnetoGroup_->plotSensorData(dataList, magnetoExtractors);
 }

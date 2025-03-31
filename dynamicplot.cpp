@@ -96,6 +96,7 @@ void DynamicPlot::plotSensorData(
     }
 
     graph_->setData(timeData, valueData);
+    graph_->setLineStyle(QCPGraph::lsLine);
     if (!timeData.isEmpty()) {
         customPlot_->xAxis->setRange(timeData.first(), timeData.last());
     }

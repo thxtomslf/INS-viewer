@@ -10,6 +10,7 @@
 #include <DynamicSetting.h>
 #include <QPushButton>
 #include <RangeSlider.h>
+#include "dynamicplotsgroup.h"
 
 namespace Ui {
 class ChartWidget;
@@ -72,6 +73,11 @@ private:
     bool isFileLoaded;
     QDateTime minTimestamp;
     QDateTime maxTimestamp;
+
+    DynamicPlotsGroup *envGroup_;
+    DynamicPlotsGroup *acceleroGroup_;
+    DynamicPlotsGroup *gyroGroup_;
+    DynamicPlotsGroup *magnetoGroup_;
 };
 
 #endif // CHARTWIDGET_H
