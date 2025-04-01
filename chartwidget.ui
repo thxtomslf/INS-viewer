@@ -150,6 +150,76 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutEnv">
            <item>
+            <widget class="QFrame" name="displayModeFrameEnv">
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayoutEnv">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>8</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="displayModeLabelEnv">
+                <property name="text">
+                 <string>Режим отображения:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="separatePlotsButtonEnv">
+                <property name="text">
+                 <string>Раздельные графики</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="combinedPlotButtonEnv">
+                <property name="text">
+                 <string>Совмещенный график</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacerEnv">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QScrollArea" name="envScrollArea">
              <property name="widgetResizable">
               <bool>true</bool>
@@ -174,6 +244,76 @@
            <string>Ускорение</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutAccelero">
+           <item>
+            <widget class="QFrame" name="displayModeFrameAccel">
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayoutAccel">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>8</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="displayModeLabelAccel">
+                <property name="text">
+                 <string>Режим отображения:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="separatePlotsButtonAccel">
+                <property name="text">
+                 <string>Раздельные графики</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="combinedPlotButtonAccel">
+                <property name="text">
+                 <string>Совмещенный график</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacerAccel">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
            <item>
             <widget class="QScrollArea" name="acceleroScrollArea">
              <property name="widgetResizable">
@@ -200,6 +340,76 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutGyro">
            <item>
+            <widget class="QFrame" name="displayModeFrameGyro">
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayoutGyro">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>8</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="displayModeLabelGyro">
+                <property name="text">
+                 <string>Режим отображения:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="separatePlotsButtonGyro">
+                <property name="text">
+                 <string>Раздельные графики</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="combinedPlotButtonGyro">
+                <property name="text">
+                 <string>Совмещенный график</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacerGyro">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QScrollArea" name="gyroScrollArea">
              <property name="widgetResizable">
               <bool>true</bool>
@@ -224,6 +434,76 @@
            <string>Магнитометр</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutMagneto">
+           <item>
+            <widget class="QFrame" name="displayModeFrameMagneto">
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayoutMagneto">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>8</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="displayModeLabelMagneto">
+                <property name="text">
+                 <string>Режим отображения:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="separatePlotsButtonMagneto">
+                <property name="text">
+                 <string>Раздельные графики</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="combinedPlotButtonMagneto">
+                <property name="text">
+                 <string>Совмещенный график</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacerMagneto">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
            <item>
             <widget class="QScrollArea" name="magnetoScrollArea">
              <property name="widgetResizable">

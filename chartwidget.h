@@ -50,6 +50,7 @@ private:
     void initStartToggleButton();
     void initCharts(std::shared_ptr<DynamicSetting<int>> plotBufferSize, std::shared_ptr<DynamicSetting<int>> plotSize);
     void initStorageButtons();
+    void initDisplayModeButtons();
 
 private slots:
     void showData();
@@ -60,6 +61,7 @@ private slots:
     void loadFromFile();
     void onUartConnectionChanged(bool connected);
     void loadDataForPeriod(const QDateTime &start, const QDateTime &end);
+    void onDisplayModeChanged();
 
 private:
     InsCommandProcessor *processor;
@@ -78,6 +80,9 @@ private:
     DynamicPlotsGroup *acceleroGroup_;
     DynamicPlotsGroup *gyroGroup_;
     DynamicPlotsGroup *magnetoGroup_;
+
+    void updateDisplayModeButtons(DynamicPlotsGroup::DisplayMode mode);
+    void setDisplayMode(DynamicPlotsGroup::DisplayMode mode);
 };
 
 #endif // CHARTWIDGET_H

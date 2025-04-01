@@ -16,6 +16,7 @@
 #include <QTabWidget>
 #include <QFileDialog>
 #include <QDir>
+#include <QButtonGroup>
 
 
 ChartWidget::ChartWidget(InsCommandProcessor *serial,
@@ -31,6 +32,7 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
     initRangeSlider();
     initSplitter();
     initToggleUartButton();
+    initDisplayModeButtons();
 
 
     // Connect signals
@@ -446,4 +448,117 @@ void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end
          [](const TimestampedSensorData &d) { return d.getMagnetoMeasures().size() > 2; }}
     };
     magnetoGroup_->plotSensorData(dataList, magnetoExtractors);
+}
+
+void ChartWidget::initDisplayModeButtons()
+{
+    // Создаем группы кнопок для каждой вкладки
+    QButtonGroup* envButtonGroup = new QButtonGroup(this);
+    envButtonGroup->addButton(ui->separatePlotsButtonEnv);
+    envButtonGroup->addButton(ui->combinedPlotButtonEnv);
+
+    QButtonGroup* acceleroButtonGroup = new QButtonGroup(this);
+    acceleroButtonGroup->addButton(ui->separatePlotsButtonAccel);
+    acceleroButtonGroup->addButton(ui->combinedPlotButtonAccel);
+
+    QButtonGroup* gyroButtonGroup = new QButtonGroup(this);
+    gyroButtonGroup->addButton(ui->separatePlotsButtonGyro);
+    gyroButtonGroup->addButton(ui->combinedPlotButtonGyro);
+
+    QButtonGroup* magnetoButtonGroup = new QButtonGroup(this);
+    magnetoButtonGroup->addButton(ui->separatePlotsButtonMagneto);
+    magnetoButtonGroup->addButton(ui->combinedPlotButtonMagneto);
+
+    // Подключаем сигналы для всех кнопок
+    QList<QPushButton*> allButtons = {
+        ui->separatePlotsButtonEnv, ui->combinedPlotButtonEnv,
+        ui->separatePlotsButtonAccel, ui->combinedPlotButtonAccel,
+        ui->separatePlotsButtonGyro, ui->combinedPlotButtonGyro,
+        ui->separatePlotsButtonMagneto, ui->combinedPlotButtonMagneto
+    };
+
+    for (auto button : allButtons) {
+        connect(button, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
+        
+        // Устанавливаем размер кнопок
+        button->setMinimumWidth(150);
+        button->setFixedHeight(30);
+    }
+
+    // Добавляем специфичные стили для кнопок режима
+    QString buttonStyle = R"(
+        QPushButton {
+            padding: 5px 15px;
+            border: 1px solid palette(mid);
+            border-radius: 4px;
+            font-size: 11pt;
+        }
+        QPushButton:checked {
+            background-color: palette(highlight);
+            color: palette(highlighted-text);
+            border-color: palette(highlight);
+        }
+        QPushButton:hover:!checked {
+            background-color: palette(light);
+        }
+        QPushButton:pressed {
+            background-color: palette(dark);
+        }
+    )";
+
+    for (auto button : allButtons) {
+        button->setStyleSheet(buttonStyle);
+    }
+
+    // Устанавливаем начальный режим
+    updateDisplayModeButtons(DynamicPlotsGroup::SEPARATE_PLOTS);
+}
+
+void ChartWidget::onDisplayModeChanged()
+{
+    QPushButton* button = qobject_cast<QPushButton*>(sender());
+    if (!button) return;
+
+    DynamicPlotsGroup::DisplayMode mode;
+    if (button->text() == "Раздельные графики") {
+        mode = DynamicPlotsGroup::SEPARATE_PLOTS;
+    } else {
+        mode = DynamicPlotsGroup::COMBINED_PLOT;
+    }
+
+    setDisplayMode(mode);
+}
+
+void ChartWidget::setDisplayMode(DynamicPlotsGroup::DisplayMode mode)
+{
+    envGroup_->setMode(mode);
+    acceleroGroup_->setMode(mode);
+    gyroGroup_->setMode(mode);
+    magnetoGroup_->setMode(mode);
+    updateDisplayModeButtons(mode);
+}
+
+void ChartWidget::updateDisplayModeButtons(DynamicPlotsGroup::DisplayMode mode)
+{
+    QList<QPushButton*> separateButtons = {
+        ui->separatePlotsButtonEnv,
+        ui->separatePlotsButtonAccel,
+        ui->separatePlotsButtonGyro,
+        ui->separatePlotsButtonMagneto
+    };
+
+    QList<QPushButton*> combinedButtons = {
+        ui->combinedPlotButtonEnv,
+        ui->combinedPlotButtonAccel,
+        ui->combinedPlotButtonGyro,
+        ui->combinedPlotButtonMagneto
+    };
+
+    for (auto button : separateButtons) {
+        button->setChecked(mode == DynamicPlotsGroup::SEPARATE_PLOTS);
+    }
+
+    for (auto button : combinedButtons) {
+        button->setChecked(mode == DynamicPlotsGroup::COMBINED_PLOT);
+    }
 }
