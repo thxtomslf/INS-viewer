@@ -56,6 +56,8 @@ file(GLOB SRC
      "rangeslider.h"
      "DynamicPlotBuffer.cpp"
      "DynamicPlotBuffer.h"
+     "DataTableWidget.cpp"
+     "DataTableWidget.h"
 )
 
 set(PROJECT_SOURCES

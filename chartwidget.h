@@ -83,6 +83,9 @@ private:
 
     void updateDisplayModeButtons(DynamicPlotsGroup::DisplayMode mode);
     void setDisplayMode(DynamicPlotsGroup::DisplayMode mode);
+
+    QPushButton* createModeButton(const QString& text);
+    void updateModeButtons(DynamicPlotsGroup::DisplayMode mode);
 };
 
 #endif // CHARTWIDGET_H

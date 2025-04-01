@@ -9,6 +9,7 @@
 #include <vector>
 #include <memory>
 #include <MultiLinePlot.h>
+#include "DataTableWidget.h"
 
 class DynamicPlotsGroup : public QWidget
 {
@@ -16,6 +17,7 @@ class DynamicPlotsGroup : public QWidget
 
 public:
     enum DisplayMode {
+        TABLE_VIEW,
         SEPARATE_PLOTS, // Режим отдельных графиков
         COMBINED_PLOT   // Режим совмещенных графиков на одном полотне
     };
@@ -51,6 +53,7 @@ private:
     QVBoxLayout *contentLayout_;
     std::vector<DynamicPlot*> plots_;
     MultiLinePlot *multiLinePlot_;
+    DataTableWidget *tableWidget_;
     
     std::vector<QString> plotLabels_;
     std::vector<std::shared_ptr<DynamicSetting<int>>> plotBufferSizes_;

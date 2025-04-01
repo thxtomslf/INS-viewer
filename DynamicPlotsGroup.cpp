@@ -2,10 +2,12 @@
 
 DynamicPlotsGroup::DynamicPlotsGroup(QWidget *parent)
     : QWidget(parent)
-    , currentMode_(DisplayMode::SEPARATE_PLOTS)
+    , currentMode_(DisplayMode::TABLE_VIEW)
     , multiLinePlot_(nullptr)
 {
     setupLayout();
+    tableWidget_ = new DataTableWidget(contentWidget_);
+    contentLayout_->addWidget(tableWidget_);
 }
 
 void DynamicPlotsGroup::setupLayout()
@@ -41,6 +43,8 @@ void DynamicPlotsGroup::addPlot(const QString &label,
 
     dataBuffers_.emplace_back(plotBufferSize);
 
+    tableWidget_->addDataColumn(label, plotBufferSize);
+
     auto plot = new DynamicPlot(contentWidget_, plotBufferSize);
     plot->setPlotSize(plotSize);
     plot->setLabel(label);
@@ -51,9 +55,7 @@ void DynamicPlotsGroup::addPlot(const QString &label,
     }
     multiLinePlot_->addGraph(label, plotBufferSize, plotSize);
 
-    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
-        contentLayout_->addWidget(plot);
-    }
+    updateLayout();
 }
 
 void DynamicPlotsGroup::clear()
@@ -120,39 +122,63 @@ QList<QList<QPair<QDateTime, double>>> DynamicPlotsGroup::getAllData() const
 
 void DynamicPlotsGroup::updateLayout()
 {
+    // Скрываем все виджеты
+    if (tableWidget_) tableWidget_->hide();
+    if (multiLinePlot_) multiLinePlot_->hide();
+    for (auto plot : plots_) {
+        plot->hide();
+    }
+
+    // Очищаем текущий layout
     QLayoutItem *child;
     while ((child = contentLayout_->takeAt(0)) != nullptr) {
-        if (child->widget() != nullptr) {
-            child->widget()->setParent(nullptr);
-        }
         delete child;
     }
 
-    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
-        if (multiLinePlot_) {
-            multiLinePlot_->setParent(nullptr);
-        }
-        for (auto plot : plots_) {
-            contentLayout_->addWidget(plot);
-        }
-    } else {
-        for (auto plot : plots_) {
-            plot->setParent(nullptr);
-        }
-        contentLayout_->addWidget(multiLinePlot_);
+    // Показываем нужный виджет
+    switch (currentMode_) {
+        case TABLE_VIEW:
+            if (tableWidget_) {
+                tableWidget_->show();
+                contentLayout_->addWidget(tableWidget_);
+            }
+            break;
+        case SEPARATE_PLOTS:
+            for (auto plot : plots_) {
+                plot->show();
+                contentLayout_->addWidget(plot);
+            }
+            break;
+        case COMBINED_PLOT:
+            if (multiLinePlot_) {
+                multiLinePlot_->show();
+                contentLayout_->addWidget(multiLinePlot_);
+            }
+            break;
     }
 
+    // Обновляем данные в текущем виджете
     updateDisplayedData();
 }
 
 void DynamicPlotsGroup::updateDisplayedData()
 {
-    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
-        for (size_t i = 0; i < plots_.size(); ++i) {
-            plots_[i]->updateFromBuffer(dataBuffers_[i]);
-        }
-    } else if (multiLinePlot_) {
-        multiLinePlot_->updateFromBuffers(dataBuffers_);
+    switch (currentMode_) {
+        case TABLE_VIEW:
+            if (tableWidget_) {
+                tableWidget_->updateFromBuffers(dataBuffers_);
+            }
+            break;
+        case SEPARATE_PLOTS:
+            for (size_t i = 0; i < plots_.size(); ++i) {
+                plots_[i]->updateFromBuffer(dataBuffers_[i]);
+            }
+            break;
+        case COMBINED_PLOT:
+            if (multiLinePlot_) {
+                multiLinePlot_->updateFromBuffers(dataBuffers_);
+            }
+            break;
     }
 }
 
@@ -163,15 +189,27 @@ void DynamicPlotsGroup::addPoint(const QDateTime &timestamp, const std::vector<d
         return;
     }
 
+    // Добавляем данные в буферы
     for (size_t i = 0; i < dataBuffers_.size(); ++i) {
         dataBuffers_[i].addPoint(timestamp, values[i]);
     }
 
-    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
-        for (size_t i = 0; i < plots_.size(); ++i) {
-            plots_[i]->updateFromBuffer(dataBuffers_[i]);
-        }
-    } else if (multiLinePlot_) {
-        multiLinePlot_->updateFromBuffers(dataBuffers_);
+    // Обновляем отображение в зависимости от текущего режима
+    switch (currentMode_) {
+        case TABLE_VIEW:
+            if (tableWidget_) {
+                tableWidget_->addPoint(timestamp, values);
+            }
+            break;
+        case SEPARATE_PLOTS:
+            for (size_t i = 0; i < plots_.size(); ++i) {
+                plots_[i]->updateFromBuffer(dataBuffers_[i]);
+            }
+            break;
+        case COMBINED_PLOT:
+            if (multiLinePlot_) {
+                multiLinePlot_->updateFromBuffers(dataBuffers_);
+            }
+            break;
     }
 }

@@ -193,12 +193,22 @@
               <item>
                <widget class="QPushButton" name="combinedPlotButtonEnv">
                 <property name="text">
-                 <string>Совмещенный график</string>
+                 <string>Общий график</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
                 </property>
                 <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="tableViewButtonEnv">
+                <property name="text">
+                 <string>Таблица</string>
+                </property>
+                <property name="checkable">
                  <bool>true</bool>
                 </property>
                </widget>
@@ -288,12 +298,22 @@
               <item>
                <widget class="QPushButton" name="combinedPlotButtonAccel">
                 <property name="text">
-                 <string>Совмещенный график</string>
+                 <string>Общий график</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
                 </property>
                 <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="tableViewButtonAccel">
+                <property name="text">
+                 <string>Таблица</string>
+                </property>
+                <property name="checkable">
                  <bool>true</bool>
                 </property>
                </widget>
@@ -383,12 +403,22 @@
               <item>
                <widget class="QPushButton" name="combinedPlotButtonGyro">
                 <property name="text">
-                 <string>Совмещенный график</string>
+                 <string>Общий график</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
                 </property>
                 <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="tableViewButtonGyro">
+                <property name="text">
+                 <string>Таблица</string>
+                </property>
+                <property name="checkable">
                  <bool>true</bool>
                 </property>
                </widget>
@@ -478,12 +508,22 @@
               <item>
                <widget class="QPushButton" name="combinedPlotButtonMagneto">
                 <property name="text">
-                 <string>Совмещенный график</string>
+                 <string>Общий график</string>
                 </property>
                 <property name="checkable">
                  <bool>true</bool>
                 </property>
                 <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="tableViewButtonMagneto">
+                <property name="text">
+                 <string>Таблица</string>
+                </property>
+                <property name="checkable">
                  <bool>true</bool>
                 </property>
                </widget>

@@ -15,7 +15,7 @@ public:
 
     void addPoint(const QDateTime& time, double value);
     void clear();
-    QList<QPair<QDateTime, double>> getData();
+    QList<QPair<QDateTime, double>> getData() const;
 
     void setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting);
 

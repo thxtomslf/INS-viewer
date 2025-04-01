@@ -93,7 +93,7 @@ void DynamicPlotBuffer::setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> ma
 }
 
 
-QList<QPair<QDateTime, double>> DynamicPlotBuffer::getData()
+QList<QPair<QDateTime, double>> DynamicPlotBuffer::getData() const
 {
     QVector<double> visibleTimeData = this->getVisibleTimeData();
     QVector<double> visibleData = this->getVisibleData();
