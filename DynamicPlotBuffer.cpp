@@ -37,15 +37,52 @@ void DynamicPlotBuffer::clear()
     headIndex_ = 0;
     currentSize_ = 0;
 }
-
 QVector<double> DynamicPlotBuffer::getVisibleTimeData() const
 {
-    return QVector<double>::fromList(timeData_.mid(0, currentSize_));
+    QVector<double> result;
+    result.reserve(currentSize_);
+    
+    if (currentSize_ == 0) {
+        return result;
+    }
+    
+    if (headIndex_ >= currentSize_) {
+        // Данные лежат непрерывно от (headIndex_ - currentSize_) до headIndex_
+        result = timeData_.mid(headIndex_ - currentSize_, currentSize_);
+    } else {
+        // Данные разорваны - берем конец и начало буфера
+        int firstPartSize = currentSize_ - headIndex_;
+        int secondPartSize = headIndex_;
+        
+        result = timeData_.mid(maxBufferSize_ - firstPartSize, firstPartSize);
+        result += timeData_.mid(0, secondPartSize);
+    }
+    
+    return result;
 }
 
 QVector<double> DynamicPlotBuffer::getVisibleData() const
 {
-    return QVector<double>::fromList(valueData_.mid(0, currentSize_));
+    QVector<double> result;
+    result.reserve(currentSize_);
+    
+    if (currentSize_ == 0) {
+        return result;
+    }
+    
+    if (headIndex_ >= currentSize_) {
+        // Данные лежат непрерывно от (headIndex_ - currentSize_) до headIndex_
+        result = valueData_.mid(headIndex_ - currentSize_, currentSize_);
+    } else {
+        // Данные разорваны - берем конец и начало буфера
+        int firstPartSize = currentSize_ - headIndex_;
+        int secondPartSize = headIndex_;
+        
+        result = valueData_.mid(maxBufferSize_ - firstPartSize, firstPartSize);
+        result += valueData_.mid(0, secondPartSize);
+    }
+    
+    return result;
 }
 
 void DynamicPlotBuffer::setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting) {
