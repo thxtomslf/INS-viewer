@@ -33,6 +33,8 @@ public:
 
     QList<QList<QPair<QDateTime, double>>> getAllData();
 
+    void updateFromBuffers(const std::vector<DynamicPlotBuffer> &buffers);
+
 private:
     void setupPlot();
     void setupLegend();

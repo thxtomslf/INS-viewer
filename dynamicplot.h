@@ -26,6 +26,7 @@ public:
         std::function<double(const TimestampedSensorData&)> valueExtractor,
         std::function<bool(const TimestampedSensorData&)> shouldPlot = [](const TimestampedSensorData&) { return true; });
     QList<QPair<QDateTime, double>> getData();
+    void updateFromBuffer(const DynamicPlotBuffer &buffer);
 
 private slots:
     void onMaxBufferSizeChanged(int newSize);

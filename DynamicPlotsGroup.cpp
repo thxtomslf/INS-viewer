@@ -39,11 +39,18 @@ void DynamicPlotsGroup::addPlot(const QString &label,
     plotBufferSizes_.push_back(plotBufferSize);
     plotSizes_.push_back(plotSize);
 
+    dataBuffers_.emplace_back(plotBufferSize);
+
     auto plot = new DynamicPlot(contentWidget_, plotBufferSize);
     plot->setPlotSize(plotSize);
     plot->setLabel(label);
     
     plots_.push_back(plot);
+    if (!multiLinePlot_) {
+        multiLinePlot_ = new MultiLinePlot(contentWidget_);
+    }
+    multiLinePlot_->addGraph(label, plotBufferSize, plotSize);
+
     if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
         contentLayout_->addWidget(plot);
     }
@@ -51,12 +58,11 @@ void DynamicPlotsGroup::addPlot(const QString &label,
 
 void DynamicPlotsGroup::clear()
 {
-    for (auto plot : plots_) {
-        plot->clear();
+    for (auto &buffer : dataBuffers_) {
+        buffer.clear();
     }
-    if (multiLinePlot_) {
-        multiLinePlot_->clear();
-    }
+    
+    updateDisplayedData();
 }
 
 void DynamicPlotsGroup::plotSensorData(
@@ -66,13 +72,19 @@ void DynamicPlotsGroup::plotSensorData(
         std::function<bool(const TimestampedSensorData&)>
     >> &extractors)
 {
-    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
-        for (size_t i = 0; i < plots_.size() && i < extractors.size(); ++i) {
-            plots_[i]->plotSensorData(dataList, extractors[i].first, extractors[i].second);
-        }
-    } else if (currentMode_ == DisplayMode::COMBINED_PLOT && multiLinePlot_) {
-        multiLinePlot_->plotSensorData(dataList, extractors);
+    for (auto &buffer : dataBuffers_) {
+        buffer.clear();
     }
+
+    for (const auto &data : dataList) {
+        for (size_t i = 0; i < extractors.size() && i < dataBuffers_.size(); ++i) {
+            if (extractors[i].second(data)) {
+                dataBuffers_[i].addPoint(data.getTimestamp(), extractors[i].first(data));
+            }
+        }
+    }
+
+    updateDisplayedData();
 }
 
 QList<QList<QPair<QDateTime, double>>> DynamicPlotsGroup::getAllData() const
@@ -98,35 +110,50 @@ void DynamicPlotsGroup::updateLayout()
         delete child;
     }
 
-    switch (currentMode_) {
-        case DisplayMode::SEPARATE_PLOTS:
-            if (multiLinePlot_ != nullptr) {
-                multiLinePlot_->setParent(nullptr);
-                delete multiLinePlot_;
-                multiLinePlot_ = nullptr;
-            }
-            for (auto plot : plots_) {
-                contentLayout_->addWidget(plot);
-            }
-            break;
+    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
+        if (multiLinePlot_) {
+            multiLinePlot_->setParent(nullptr);
+        }
+        for (auto plot : plots_) {
+            contentLayout_->addWidget(plot);
+        }
+    } else {
+        for (auto plot : plots_) {
+            plot->setParent(nullptr);
+        }
+        contentLayout_->addWidget(multiLinePlot_);
+    }
 
-        case DisplayMode::COMBINED_PLOT:
-            multiLinePlot_ = new MultiLinePlot(contentWidget_);
-            for (size_t i = 0; i < plots_.size(); ++i) {
-                multiLinePlot_->addGraph(plotLabels_[i], plotBufferSizes_[i], plotSizes_[i]);
-            }
-            contentLayout_->addWidget(multiLinePlot_);
-            break;
+    updateDisplayedData();
+}
+
+void DynamicPlotsGroup::updateDisplayedData()
+{
+    if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
+        for (size_t i = 0; i < plots_.size(); ++i) {
+            plots_[i]->updateFromBuffer(dataBuffers_[i]);
+        }
+    } else if (multiLinePlot_) {
+        multiLinePlot_->updateFromBuffers(dataBuffers_);
     }
 }
 
 void DynamicPlotsGroup::addPoint(const QDateTime &timestamp, const std::vector<double> &values)
 {
+    if (values.size() != dataBuffers_.size()) {
+        qDebug() << "Error: Number of values doesn't match number of buffers";
+        return;
+    }
+
+    for (size_t i = 0; i < dataBuffers_.size(); ++i) {
+        dataBuffers_[i].addPoint(timestamp, values[i]);
+    }
+
     if (currentMode_ == DisplayMode::SEPARATE_PLOTS) {
-        for (size_t i = 0; i < plots_.size() && i < values.size(); ++i) {
-            plots_[i]->addPoint(timestamp, values[i]);
+        for (size_t i = 0; i < plots_.size(); ++i) {
+            plots_[i]->updateFromBuffer(dataBuffers_[i]);
         }
-    } else if (currentMode_ == DisplayMode::COMBINED_PLOT && multiLinePlot_) {
-        multiLinePlot_->addPoint(timestamp, values);
+    } else if (multiLinePlot_) {
+        multiLinePlot_->updateFromBuffers(dataBuffers_);
     }
 }

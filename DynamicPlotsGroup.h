@@ -41,6 +41,9 @@ public:
 private:
     void setupLayout();
     void updateLayout();
+    void syncDataToMultiLinePlot();  // Новый метод для синхронизации данных
+    void syncDataFromMultiLinePlot(); // Новый метод для синхронизации данных
+    void updateDisplayedData(); // Добавляем объявление метода
 
     DisplayMode currentMode_;
     QScrollArea *scrollArea_;
@@ -49,10 +52,12 @@ private:
     std::vector<DynamicPlot*> plots_;
     MultiLinePlot *multiLinePlot_;
     
-    // Сохраняем настройки для каждого графика
     std::vector<QString> plotLabels_;
     std::vector<std::shared_ptr<DynamicSetting<int>>> plotBufferSizes_;
     std::vector<std::shared_ptr<DynamicSetting<int>>> plotSizes_;
+
+    // Общее хранилище данных для всех режимов отображения
+    std::vector<DynamicPlotBuffer> dataBuffers_;
 };
 
 #endif // DYNAMICPLOTSGROUP_H 

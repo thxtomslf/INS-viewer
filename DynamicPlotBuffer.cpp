@@ -38,11 +38,13 @@ void DynamicPlotBuffer::clear()
     currentSize_ = 0;
 }
 
-QVector<double> DynamicPlotBuffer::getVisibleTimeData() {
+QVector<double> DynamicPlotBuffer::getVisibleTimeData() const
+{
     return QVector<double>::fromList(timeData_.mid(0, currentSize_));
 }
 
-QVector<double> DynamicPlotBuffer::getVisibleData() {
+QVector<double> DynamicPlotBuffer::getVisibleData() const
+{
     return QVector<double>::fromList(valueData_.mid(0, currentSize_));
 }
 

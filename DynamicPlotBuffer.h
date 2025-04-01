@@ -19,9 +19,8 @@ public:
 
     void setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting);
 
-    QVector<double> getVisibleTimeData();
-
-    QVector<double> getVisibleData();
+    QVector<double> getVisibleTimeData() const;
+    QVector<double> getVisibleData() const;
 
 private:
     void onMaxBufferSizeChanged(int newSize);

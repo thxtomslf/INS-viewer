@@ -128,3 +128,16 @@ QList<QPair<QDateTime, double>> DynamicPlot::getData()
 
     return dataList;
 }
+
+void DynamicPlot::updateFromBuffer(const DynamicPlotBuffer &buffer)
+{
+    QVector<double> timeData = buffer.getVisibleTimeData();
+    QVector<double> valueData = buffer.getVisibleData();
+    
+    graph_->setData(timeData, valueData);
+    if (!timeData.isEmpty()) {
+        customPlot_->xAxis->setRange(timeData.first(), timeData.last());
+    }
+    customPlot_->rescaleAxes(true);
+    customPlot_->replot();
+}

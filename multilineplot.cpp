@@ -139,4 +139,20 @@ QList<QList<QPair<QDateTime, double>>> MultiLinePlot::getAllData()
 void MultiLinePlot::updatePlotSize(int newSize)
 {
     customPlot_->setMinimumSize(newSize, newSize);
+}
+
+void MultiLinePlot::updateFromBuffers(const std::vector<DynamicPlotBuffer> &buffers)
+{
+    if (buffers.size() != static_cast<size_t>(customPlot_->graphCount())) {
+        return;
+    }
+
+    for (size_t i = 0; i < buffers.size(); ++i) {
+        QVector<double> timeData = buffers[i].getVisibleTimeData();
+        QVector<double> valueData = buffers[i].getVisibleData();
+        customPlot_->graph(i)->setData(timeData, valueData);
+    }
+
+    customPlot_->rescaleAxes();
+    customPlot_->replot();
 } 
