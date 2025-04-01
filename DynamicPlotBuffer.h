@@ -22,6 +22,9 @@ public:
     QVector<double> getVisibleTimeData() const;
     QVector<double> getVisibleData() const;
 
+    QVector<double> getAllTimeData() const;
+    QVector<double> getAllData() const;
+
 private:
     void onMaxBufferSizeChanged(int newSize);
 

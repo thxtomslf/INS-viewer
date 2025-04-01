@@ -379,15 +379,6 @@ void ChartWidget::setMode(WidgetMode mode) {
     }
 }
 
-// TODO: make DynamicPlotsGroup, который будет из себя представлять scroll area внутри которого будет
-// лэйаут с графиками. у него должен быть метод setMode() с енамом.
-// внутри надо насоздавать DynamicPlotBuffer для каждого полученного типа графа
-// затем надо создать под них виджеты для отображения и передавать туда DynamicPlotBuffer:
-// для первого режима надо создать три DynamicPlot и положить их в vertical layout - и это в мапу, где ключ - это режим
-// для второго режима надо содать один DynamicPlot с тремя графиками (создать отдельный класс на основе DynamicPlot)
-// для третьего - создать таблицу (отдельный класс)
-
-// внутри stacked widget добавить кнопки и в этом классе добавиь их обработчики
 void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end) {
     clearGraphs();
 

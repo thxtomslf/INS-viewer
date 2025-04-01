@@ -79,3 +79,13 @@ void DynamicPlotBuffer::onMaxBufferSizeChanged(int newSize)
         currentSize_ = maxBufferSize_;
     }
 }
+
+QVector<double> DynamicPlotBuffer::getAllTimeData() const
+{
+    return timeData_;
+}
+
+QVector<double> DynamicPlotBuffer::getAllData() const
+{
+    return valueData_;
+}

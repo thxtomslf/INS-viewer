@@ -89,14 +89,32 @@ void DynamicPlotsGroup::plotSensorData(
 
 QList<QList<QPair<QDateTime, double>>> DynamicPlotsGroup::getAllData() const
 {
-    if (currentMode_ == DisplayMode::COMBINED_PLOT && multiLinePlot_) {
-        return multiLinePlot_->getAllData();
-    }
-
     QList<QList<QPair<QDateTime, double>>> result;
-    for (const auto& plot : plots_) {
-        result.append(plot->getData());
+    QTimeZone timeZone = QTimeZone::utc();
+    
+    // Преобразуем данные из каждого буфера
+    for (const auto& buffer : dataBuffers_) {
+        QList<QPair<QDateTime, double>> plotData;
+        
+        // Получаем все временные метки и значения из буфера
+        QVector<double> times = buffer.getVisibleTimeData();
+        QVector<double> values = buffer.getVisibleData();
+        
+        // Преобразуем временные метки из Unix timestamp в QDateTime
+        for (int i = 0; i < times.size(); ++i) {
+            qint64 seconds = static_cast<qint64>(times[i]);
+            int milliseconds = static_cast<int>((times[i] - seconds) * 1000);
+
+            // Создаем QDateTime из секунд и добавляем миллисекунды
+            QDateTime timestamp = QDateTime::fromSecsSinceEpoch(seconds, timeZone);
+            timestamp = timestamp.addMSecs(milliseconds);
+
+            plotData.append(qMakePair(timestamp, values[i]));
+        }
+        
+        result.append(plotData);
     }
+    
     return result;
 }
 
