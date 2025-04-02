@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <RangeSlider.h>
 #include "dynamicplotsgroup.h"
+#include "OrientablePushButton.h"
 
 namespace Ui {
 class ChartWidget;
@@ -61,7 +62,6 @@ private slots:
     void loadFromFile();
     void onUartConnectionChanged(bool connected);
     void loadDataForPeriod(const QDateTime &start, const QDateTime &end);
-    void onDisplayModeChanged();
 
 private:
     InsCommandProcessor *processor;
@@ -86,6 +86,10 @@ private:
 
     QPushButton* createModeButton(const QString& text);
     void updateModeButtons(DynamicPlotsGroup::DisplayMode mode);
+
+    OrientablePushButton* separatePlotsButton_ = nullptr;
+    OrientablePushButton* combinedPlotButton_ = nullptr;
+    OrientablePushButton* tableViewButton_ = nullptr;
 };
 
 #endif // CHARTWIDGET_H

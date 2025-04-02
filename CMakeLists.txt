@@ -58,6 +58,8 @@ file(GLOB SRC
      "DynamicPlotBuffer.h"
      "DataTableWidget.cpp"
      "DataTableWidget.h"
+     "OrientablePushButton.cpp"
+     "OrientablePushButton.h"
 )
 
 set(PROJECT_SOURCES

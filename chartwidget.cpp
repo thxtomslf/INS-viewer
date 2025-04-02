@@ -6,6 +6,7 @@
 #include "pagerouter.h"
 #include "uartwidget.h"
 #include "dynamicplotsgroup.h"
+#include "OrientablePushButton.h"
 
 #include <QVBoxLayout>
 #include <QDateTime>
@@ -433,63 +434,88 @@ void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end
 
 void ChartWidget::initDisplayModeButtons()
 {
+    // Создаем вертикальные кнопки
+    OrientablePushButton* separatePlotsButton = new OrientablePushButton("Раздельные графики", this);
+    OrientablePushButton* combinedPlotButton = new OrientablePushButton("Общий график", this);
+    OrientablePushButton* tableViewButton = new OrientablePushButton("Таблица", this);
+
+    // Настраиваем свойства кнопок
+    QList<OrientablePushButton*> buttons = {separatePlotsButton, combinedPlotButton, tableViewButton};
+    for (auto button : buttons) {
+        button->setOrientation(OrientablePushButton::VerticalTopToBottom);
+        button->setCheckable(true);
+        button->setMinimumSize(60, 120);
+        button->setMaximumWidth(60);
+    }
+
+    // Добавляем кнопки в layout
+    QVBoxLayout* buttonLayout = new QVBoxLayout(ui->buttonsFrame);
+    buttonLayout->setSpacing(2);
+    buttonLayout->setContentsMargins(2, 30, 2, 2);
+    
+    for (auto button : buttons) {
+        buttonLayout->addWidget(button);
+    }
+    
+    // Добавляем растягивающийся спейсер в конец
+    buttonLayout->addStretch();
+
     // Создаем группу кнопок
     QButtonGroup* buttonGroup = new QButtonGroup(this);
-    buttonGroup->addButton(ui->separatePlotsButton);
-    buttonGroup->addButton(ui->combinedPlotButton);
-    buttonGroup->addButton(ui->tableViewButton);
+    buttonGroup->addButton(separatePlotsButton);
+    buttonGroup->addButton(combinedPlotButton);
+    buttonGroup->addButton(tableViewButton);
 
     // Подключаем сигналы
-    connect(ui->separatePlotsButton, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
-    connect(ui->combinedPlotButton, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
-    connect(ui->tableViewButton, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
+    connect(separatePlotsButton, &OrientablePushButton::clicked, [this]() {
+        setDisplayMode(DynamicPlotsGroup::SEPARATE_PLOTS);
+    });
+    connect(combinedPlotButton, &OrientablePushButton::clicked, [this]() {
+        setDisplayMode(DynamicPlotsGroup::COMBINED_PLOT);
+    });
+    connect(tableViewButton, &OrientablePushButton::clicked, [this]() {
+        setDisplayMode(DynamicPlotsGroup::TABLE_VIEW);
+    });
 
     // Устанавливаем стили для кнопок
     QString buttonStyle = R"(
-        QPushButton {
+        OrientablePushButton {
             padding: 5px;
             border: 1px solid palette(mid);
             border-radius: 4px;
             font-size: 10pt;
         }
-        QPushButton:checked {
+        OrientablePushButton:checked {
             background-color: palette(highlight);
             color: palette(highlighted-text);
             border-color: palette(highlight);
         }
-        QPushButton:hover:!checked {
+        OrientablePushButton:hover:!checked {
             background-color: palette(light);
         }
-        QPushButton:pressed {
+        OrientablePushButton:pressed {
             background-color: palette(dark);
         }
     )";
 
-    ui->separatePlotsButton->setStyleSheet(buttonStyle);
-    ui->combinedPlotButton->setStyleSheet(buttonStyle);
-    ui->tableViewButton->setStyleSheet(buttonStyle);
+    for (auto button : buttons) {
+        button->setStyleSheet(buttonStyle);
+    }
+
+    // Сохраняем указатели на кнопки для последующего использования
+    separatePlotsButton_ = separatePlotsButton;
+    combinedPlotButton_ = combinedPlotButton;
+    tableViewButton_ = tableViewButton;
 
     // Устанавливаем начальный режим
     updateDisplayModeButtons(DynamicPlotsGroup::SEPARATE_PLOTS);
 }
 
-void ChartWidget::onDisplayModeChanged()
+void ChartWidget::updateDisplayModeButtons(DynamicPlotsGroup::DisplayMode mode)
 {
-    QPushButton* button = qobject_cast<QPushButton*>(sender());
-    if (!button) return;
-
-    DynamicPlotsGroup::DisplayMode mode;
-    if (button == ui->separatePlotsButton) {
-        mode = DynamicPlotsGroup::SEPARATE_PLOTS;
-    } else if (button == ui->combinedPlotButton) {
-        mode = DynamicPlotsGroup::COMBINED_PLOT;
-    } else if (button == ui->tableViewButton) {
-        mode = DynamicPlotsGroup::TABLE_VIEW;
-    } else {
-        return;
-    }
-
-    setDisplayMode(mode);
+    if (separatePlotsButton_) separatePlotsButton_->setChecked(mode == DynamicPlotsGroup::SEPARATE_PLOTS);
+    if (combinedPlotButton_) combinedPlotButton_->setChecked(mode == DynamicPlotsGroup::COMBINED_PLOT);
+    if (tableViewButton_) tableViewButton_->setChecked(mode == DynamicPlotsGroup::TABLE_VIEW);
 }
 
 void ChartWidget::setDisplayMode(DynamicPlotsGroup::DisplayMode mode)
@@ -499,11 +525,4 @@ void ChartWidget::setDisplayMode(DynamicPlotsGroup::DisplayMode mode)
     gyroGroup_->setMode(mode);
     magnetoGroup_->setMode(mode);
     updateDisplayModeButtons(mode);
-}
-
-void ChartWidget::updateDisplayModeButtons(DynamicPlotsGroup::DisplayMode mode)
-{
-    ui->separatePlotsButton->setChecked(mode == DynamicPlotsGroup::SEPARATE_PLOTS);
-    ui->combinedPlotButton->setChecked(mode == DynamicPlotsGroup::COMBINED_PLOT);
-    ui->tableViewButton->setChecked(mode == DynamicPlotsGroup::TABLE_VIEW);
 }
