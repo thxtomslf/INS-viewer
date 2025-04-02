@@ -215,6 +215,9 @@ void ChartWidget::handleStopSignal()
 void ChartWidget::showData()
 {
     setMode(ChartWidget::WidgetMode::UART);
+    
+    // Очищаем графики перед началом
+    clearGraphs();
 
     processor->readData([this](const QByteArray &data) {
         CommandResponse<SensorData> response(data);
@@ -434,9 +437,9 @@ void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end
 
 void ChartWidget::initDisplayModeButtons()
 {
-    // Создаем вертикальные кнопки
-    OrientablePushButton* separatePlotsButton = new OrientablePushButton("Раздельные графики", this);
-    OrientablePushButton* combinedPlotButton = new OrientablePushButton("Общий график", this);
+    // Создаем вертикальные кнопки с новыми названиями
+    OrientablePushButton* separatePlotsButton = new OrientablePushButton("Графики", this);
+    OrientablePushButton* combinedPlotButton = new OrientablePushButton("Группировка графиков", this);
     OrientablePushButton* tableViewButton = new OrientablePushButton("Таблица", this);
 
     // Настраиваем свойства кнопок
@@ -444,8 +447,13 @@ void ChartWidget::initDisplayModeButtons()
     for (auto button : buttons) {
         button->setOrientation(OrientablePushButton::VerticalTopToBottom);
         button->setCheckable(true);
-        button->setMinimumSize(60, 120);
-        button->setMaximumWidth(60);
+        button->setMinimumSize(40, 120); // Уменьшена ширина с 60 до 40
+        button->setMaximumWidth(40);      // Уменьшена максимальная ширина
+        
+        // Увеличиваем размер шрифта
+        QFont font = button->font();
+        font.setPointSize(11); // Увеличиваем размер шрифта
+        button->setFont(font);
     }
 
     // Добавляем кнопки в layout
@@ -480,10 +488,10 @@ void ChartWidget::initDisplayModeButtons()
     // Устанавливаем стили для кнопок
     QString buttonStyle = R"(
         OrientablePushButton {
-            padding: 5px;
+            padding: 3px;
             border: 1px solid palette(mid);
             border-radius: 4px;
-            font-size: 10pt;
+            font-size: 11pt;
         }
         OrientablePushButton:checked {
             background-color: palette(highlight);
@@ -507,8 +515,8 @@ void ChartWidget::initDisplayModeButtons()
     combinedPlotButton_ = combinedPlotButton;
     tableViewButton_ = tableViewButton;
 
-    // Устанавливаем начальный режим
-    updateDisplayModeButtons(DynamicPlotsGroup::SEPARATE_PLOTS);
+    // Устанавливаем начальный режим - Раздельные графики
+    separatePlotsButton->setChecked(true);
 }
 
 void ChartWidget::updateDisplayModeButtons(DynamicPlotsGroup::DisplayMode mode)

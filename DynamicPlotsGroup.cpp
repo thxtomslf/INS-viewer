@@ -2,7 +2,7 @@
 
 DynamicPlotsGroup::DynamicPlotsGroup(QWidget *parent)
     : QWidget(parent)
-    , currentMode_(DisplayMode::TABLE_VIEW)
+    , currentMode_(DynamicPlotsGroup::SEPARATE_PLOTS)
     , multiLinePlot_(nullptr)
 {
     setupLayout();
