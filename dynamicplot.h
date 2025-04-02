@@ -8,6 +8,9 @@
 #include <QWidget>
 #include <qcustomplot.h>
 #include <memory>
+#include <QScrollArea>
+#include <QWheelEvent>
+#include <QApplication>
 
 class DynamicPlot : public QWidget
 {
@@ -28,6 +31,10 @@ public:
     QList<QPair<QDateTime, double>> getData();
     void updateFromBuffer(const DynamicPlotBuffer &buffer);
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
+
 private slots:
     void onMaxBufferSizeChanged(int newSize);
 
@@ -37,6 +44,9 @@ private:
 
     DynamicPlotBuffer buffer_;
     std::shared_ptr<DynamicSetting<int>> plotSize;
+
+    bool shouldHandleWheelEvent(QWheelEvent *event) const;
+    QScrollArea* findParentScrollArea() const;
 };
 
 #endif // DYNAMICPLOT_H

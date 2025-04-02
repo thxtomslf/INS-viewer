@@ -2,6 +2,8 @@
 #include <QVBoxLayout>
 #include <QSharedPointer>
 #include <QDateTime>
+#include <QApplication>
+#include <QScrollArea>
 
 DynamicPlot::DynamicPlot(QWidget *parent, std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting)
     : QWidget(parent)
@@ -24,6 +26,10 @@ DynamicPlot::DynamicPlot(QWidget *parent, std::shared_ptr<DynamicSetting<int>> m
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(customPlot_);
     setLayout(layout);
+
+    // Устанавливаем фильтр событий для QCustomPlot
+    customPlot_->installEventFilter(this);
+    customPlot_->setFocusPolicy(Qt::StrongFocus); // Чтобы получать события клавиатуры
 }
 
 void DynamicPlot::setPlotSize(std::shared_ptr<DynamicSetting<int>> plotSize) {
@@ -140,4 +146,74 @@ void DynamicPlot::updateFromBuffer(const DynamicPlotBuffer &buffer)
     }
     customPlot_->rescaleAxes(true);
     customPlot_->replot();
+}
+
+bool DynamicPlot::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == customPlot_ && event->type() == QEvent::Wheel) {
+        QWheelEvent *wheelEvent = static_cast<QWheelEvent*>(event);
+        
+        // Если зажат Ctrl, позволяем QCustomPlot обрабатывать событие (зум)
+        if (wheelEvent->modifiers() & Qt::ControlModifier) {
+            return false;
+        }
+
+        // Передаем событие в родительский QScrollArea
+        if (QScrollArea *scrollArea = findParentScrollArea()) {
+            QWheelEvent *newEvent = new QWheelEvent(
+                wheelEvent->position(),
+                wheelEvent->globalPosition(),
+                wheelEvent->pixelDelta(),
+                wheelEvent->angleDelta(),
+                wheelEvent->buttons(),
+                wheelEvent->modifiers(),
+                wheelEvent->phase(),
+                wheelEvent->inverted()
+            );
+            QApplication::sendEvent(scrollArea->viewport(), newEvent);
+            delete newEvent;
+            return true;
+        }
+    }
+    return QWidget::eventFilter(obj, event);
+}
+
+void DynamicPlot::wheelEvent(QWheelEvent *event)
+{
+    // Если зажат Ctrl, обрабатываем событие (зум)
+    if (event->modifiers() & Qt::ControlModifier) {
+        QWidget::wheelEvent(event);
+        return;
+    }
+
+    // В противном случае передаем событие родительскому QScrollArea
+    if (QScrollArea *scrollArea = findParentScrollArea()) {
+        QWheelEvent *newEvent = new QWheelEvent(
+            event->position(),
+            event->globalPosition(),
+            event->pixelDelta(),
+            event->angleDelta(),
+            event->buttons(),
+            event->modifiers(),
+            event->phase(),
+            event->inverted()
+        );
+        QApplication::sendEvent(scrollArea->viewport(), newEvent);
+        delete newEvent;
+        event->accept();
+    } else {
+        QWidget::wheelEvent(event);
+    }
+}
+
+QScrollArea* DynamicPlot::findParentScrollArea() const
+{
+    QWidget *parent = parentWidget();
+    while (parent) {
+        if (QScrollArea *scrollArea = qobject_cast<QScrollArea*>(parent)) {
+            return scrollArea;
+        }
+        parent = parent->parentWidget();
+    }
+    return nullptr;
 }
