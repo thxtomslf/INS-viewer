@@ -34,7 +34,6 @@ ChartWidget::ChartWidget(InsCommandProcessor *serial,
     initToggleUartButton();
     initDisplayModeButtons();
 
-
     // Connect signals
     initStorageButtons();
 
@@ -100,7 +99,6 @@ void ChartWidget::initStorageButtons() {
     connect(processor, &InsCommandProcessor::connectionStatusChanged, this, &ChartWidget::onUartConnectionChanged);
     connect(ui->saveToFileButton, &QPushButton::clicked, this, &ChartWidget::saveToFile);
     connect(ui->loadButton, &QPushButton::clicked, this, &ChartWidget::loadFromFile);
-
 }
 
 void ChartWidget::initCharts(std::shared_ptr<DynamicSetting<int>> plotBufferSize, std::shared_ptr<DynamicSetting<int>> plotSize)
@@ -218,7 +216,6 @@ void ChartWidget::showData()
     setMode(ChartWidget::WidgetMode::UART);
 
     processor->readData([this](const QByteArray &data) {
-
         CommandResponse<SensorData> response(data);
         if (response.getResponseType() == CommandResponse<SensorData>::BAD_RESPONSE) {
             qDebug() << "Bad response: " << response.getError();
@@ -252,7 +249,6 @@ void ChartWidget::onUartConnectionChanged(bool connected)
 
 void ChartWidget::saveToFile()
 {
-
     // Collect data from all charts
     QList<TimestampedSensorData> allData;
 
@@ -325,7 +321,6 @@ void ChartWidget::saveToFile()
 
 void ChartWidget::loadFromFile() {
     try {
-        // Получаем все данные из файла
         storageManager->loadFile(this);
         if (storageManager->getReadFileName().isEmpty()) {
             return;
@@ -336,13 +331,10 @@ void ChartWidget::loadFromFile() {
             throw std::runtime_error("Файл не содержит данных.");
         }
 
-        // Получаем минимальный и максимальный timestamp
         minTimestamp = allData.first().getTimestamp();
         maxTimestamp = allData.last().getTimestamp();
 
-        // Устанавливаем диапазон слайдера
         rangeSlider->setRange(minTimestamp, maxTimestamp);
-
         loadDataForPeriod(minTimestamp, maxTimestamp);
 
     } catch (const std::exception &e) {
@@ -372,10 +364,8 @@ void ChartWidget::setMode(WidgetMode mode) {
         ui->currentFileLabel->setVisible(true);
 
         ui->startToggleButton->onPauseClicked();
-
         ui->currentFileLabel->setText(storageManager->getReadFileName());
-
-        rangeSlider->setVisible(true); // Показываем слайдер
+        rangeSlider->setVisible(true);
     }
 }
 
@@ -443,50 +433,24 @@ void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end
 
 void ChartWidget::initDisplayModeButtons()
 {
-    // Создаем группы кнопок для каждой вкладки
-    QButtonGroup* envButtonGroup = new QButtonGroup(this);
-    envButtonGroup->addButton(ui->separatePlotsButtonEnv);
-    envButtonGroup->addButton(ui->combinedPlotButtonEnv);
-    envButtonGroup->addButton(ui->tableViewButtonEnv);  // Добавляем новую кнопку
+    // Создаем группу кнопок
+    QButtonGroup* buttonGroup = new QButtonGroup(this);
+    buttonGroup->addButton(ui->separatePlotsButton);
+    buttonGroup->addButton(ui->combinedPlotButton);
+    buttonGroup->addButton(ui->tableViewButton);
 
-    QButtonGroup* acceleroButtonGroup = new QButtonGroup(this);
-    acceleroButtonGroup->addButton(ui->separatePlotsButtonAccel);
-    acceleroButtonGroup->addButton(ui->combinedPlotButtonAccel);
-    acceleroButtonGroup->addButton(ui->tableViewButtonAccel);  // Добавляем новую кнопку
+    // Подключаем сигналы
+    connect(ui->separatePlotsButton, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
+    connect(ui->combinedPlotButton, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
+    connect(ui->tableViewButton, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
 
-    QButtonGroup* gyroButtonGroup = new QButtonGroup(this);
-    gyroButtonGroup->addButton(ui->separatePlotsButtonGyro);
-    gyroButtonGroup->addButton(ui->combinedPlotButtonGyro);
-    gyroButtonGroup->addButton(ui->tableViewButtonGyro);  // Добавляем новую кнопку
-
-    QButtonGroup* magnetoButtonGroup = new QButtonGroup(this);
-    magnetoButtonGroup->addButton(ui->separatePlotsButtonMagneto);
-    magnetoButtonGroup->addButton(ui->combinedPlotButtonMagneto);
-    magnetoButtonGroup->addButton(ui->tableViewButtonMagneto);  // Добавляем новую кнопку
-
-    // Подключаем сигналы для всех кнопок
-    QList<QPushButton*> allButtons = {
-        ui->separatePlotsButtonEnv, ui->combinedPlotButtonEnv, ui->tableViewButtonEnv,
-        ui->separatePlotsButtonAccel, ui->combinedPlotButtonAccel, ui->tableViewButtonAccel,
-        ui->separatePlotsButtonGyro, ui->combinedPlotButtonGyro, ui->tableViewButtonGyro,
-        ui->separatePlotsButtonMagneto, ui->combinedPlotButtonMagneto, ui->tableViewButtonMagneto
-    };
-
-    for (auto button : allButtons) {
-        connect(button, &QPushButton::clicked, this, &ChartWidget::onDisplayModeChanged);
-        
-        // Устанавливаем размер кнопок
-        button->setMinimumWidth(120);  // Уменьшаем ширину для трех кнопок
-        button->setFixedHeight(30);
-    }
-
-    // Добавляем специфичные стили для кнопок режима
+    // Устанавливаем стили для кнопок
     QString buttonStyle = R"(
         QPushButton {
-            padding: 5px 10px;
+            padding: 5px;
             border: 1px solid palette(mid);
             border-radius: 4px;
-            font-size: 11pt;
+            font-size: 10pt;
         }
         QPushButton:checked {
             background-color: palette(highlight);
@@ -501,12 +465,12 @@ void ChartWidget::initDisplayModeButtons()
         }
     )";
 
-    for (auto button : allButtons) {
-        button->setStyleSheet(buttonStyle);
-    }
+    ui->separatePlotsButton->setStyleSheet(buttonStyle);
+    ui->combinedPlotButton->setStyleSheet(buttonStyle);
+    ui->tableViewButton->setStyleSheet(buttonStyle);
 
     // Устанавливаем начальный режим
-    updateDisplayModeButtons(DynamicPlotsGroup::TABLE_VIEW);
+    updateDisplayModeButtons(DynamicPlotsGroup::SEPARATE_PLOTS);
 }
 
 void ChartWidget::onDisplayModeChanged()
@@ -515,11 +479,11 @@ void ChartWidget::onDisplayModeChanged()
     if (!button) return;
 
     DynamicPlotsGroup::DisplayMode mode;
-    if (button->text() == "Раздельные графики") {
+    if (button == ui->separatePlotsButton) {
         mode = DynamicPlotsGroup::SEPARATE_PLOTS;
-    } else if (button->text() == "Общий график") {
+    } else if (button == ui->combinedPlotButton) {
         mode = DynamicPlotsGroup::COMBINED_PLOT;
-    } else if (button->text() == "Таблица") {
+    } else if (button == ui->tableViewButton) {
         mode = DynamicPlotsGroup::TABLE_VIEW;
     } else {
         return;
@@ -539,36 +503,7 @@ void ChartWidget::setDisplayMode(DynamicPlotsGroup::DisplayMode mode)
 
 void ChartWidget::updateDisplayModeButtons(DynamicPlotsGroup::DisplayMode mode)
 {
-    QList<QPushButton*> separateButtons = {
-        ui->separatePlotsButtonEnv,
-        ui->separatePlotsButtonAccel,
-        ui->separatePlotsButtonGyro,
-        ui->separatePlotsButtonMagneto
-    };
-
-    QList<QPushButton*> combinedButtons = {
-        ui->combinedPlotButtonEnv,
-        ui->combinedPlotButtonAccel,
-        ui->combinedPlotButtonGyro,
-        ui->combinedPlotButtonMagneto
-    };
-
-    QList<QPushButton*> tableButtons = {
-        ui->tableViewButtonEnv,
-        ui->tableViewButtonAccel,
-        ui->tableViewButtonGyro,
-        ui->tableViewButtonMagneto
-    };
-
-    for (auto button : separateButtons) {
-        button->setChecked(mode == DynamicPlotsGroup::SEPARATE_PLOTS);
-    }
-
-    for (auto button : combinedButtons) {
-        button->setChecked(mode == DynamicPlotsGroup::COMBINED_PLOT);
-    }
-
-    for (auto button : tableButtons) {
-        button->setChecked(mode == DynamicPlotsGroup::TABLE_VIEW);
-    }
+    ui->separatePlotsButton->setChecked(mode == DynamicPlotsGroup::SEPARATE_PLOTS);
+    ui->combinedPlotButton->setChecked(mode == DynamicPlotsGroup::COMBINED_PLOT);
+    ui->tableViewButton->setChecked(mode == DynamicPlotsGroup::TABLE_VIEW);
 }

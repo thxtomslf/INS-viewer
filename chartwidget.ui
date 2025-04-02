@@ -138,97 +138,17 @@
       </layout>
      </widget>
      <widget class="QWidget" name="rightContainer">
-      <layout class="QVBoxLayout" name="rightLayout">
+      <layout class="QHBoxLayout" name="rightLayout">
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>3</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabEnvironment">
           <attribute name="title">
            <string>Окр.среда</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutEnv">
-           <item>
-            <widget class="QFrame" name="displayModeFrameEnv">
-             <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayoutEnv">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="displayModeLabelEnv">
-                <property name="text">
-                 <string>Режим отображения:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="separatePlotsButtonEnv">
-                <property name="text">
-                 <string>Раздельные графики</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="combinedPlotButtonEnv">
-                <property name="text">
-                 <string>Общий график</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="tableViewButtonEnv">
-                <property name="text">
-                 <string>Таблица</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacerEnv">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-           </item>
            <item>
             <widget class="QScrollArea" name="envScrollArea">
              <property name="widgetResizable">
@@ -239,8 +159,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>1019</width>
-                <height>185</height>
+                <width>955</width>
+                <height>219</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutEnv_2"/>
@@ -255,86 +175,6 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutAccelero">
            <item>
-            <widget class="QFrame" name="displayModeFrameAccel">
-             <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayoutAccel">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="displayModeLabelAccel">
-                <property name="text">
-                 <string>Режим отображения:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="separatePlotsButtonAccel">
-                <property name="text">
-                 <string>Раздельные графики</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="combinedPlotButtonAccel">
-                <property name="text">
-                 <string>Общий график</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="tableViewButtonAccel">
-                <property name="text">
-                 <string>Таблица</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacerAccel">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
             <widget class="QScrollArea" name="acceleroScrollArea">
              <property name="widgetResizable">
               <bool>true</bool>
@@ -344,8 +184,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>1019</width>
-                <height>185</height>
+                <width>955</width>
+                <height>219</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutAccelero_2"/>
@@ -360,86 +200,6 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutGyro">
            <item>
-            <widget class="QFrame" name="displayModeFrameGyro">
-             <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayoutGyro">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="displayModeLabelGyro">
-                <property name="text">
-                 <string>Режим отображения:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="separatePlotsButtonGyro">
-                <property name="text">
-                 <string>Раздельные графики</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="combinedPlotButtonGyro">
-                <property name="text">
-                 <string>Общий график</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="tableViewButtonGyro">
-                <property name="text">
-                 <string>Таблица</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacerGyro">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
             <widget class="QScrollArea" name="gyroScrollArea">
              <property name="widgetResizable">
               <bool>true</bool>
@@ -449,8 +209,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>1019</width>
-                <height>185</height>
+                <width>955</width>
+                <height>219</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutGyro_2"/>
@@ -465,86 +225,6 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayoutMagneto">
            <item>
-            <widget class="QFrame" name="displayModeFrameMagneto">
-             <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayoutMagneto">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>8</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="displayModeLabelMagneto">
-                <property name="text">
-                 <string>Режим отображения:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="separatePlotsButtonMagneto">
-                <property name="text">
-                 <string>Раздельные графики</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="combinedPlotButtonMagneto">
-                <property name="text">
-                 <string>Общий график</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="autoExclusive">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="tableViewButtonMagneto">
-                <property name="text">
-                 <string>Таблица</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacerMagneto">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
             <widget class="QScrollArea" name="magnetoScrollArea">
              <property name="widgetResizable">
               <bool>true</bool>
@@ -554,8 +234,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>1019</width>
-                <height>185</height>
+                <width>955</width>
+                <height>219</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutMagneto_2"/>
@@ -564,6 +244,130 @@
            </item>
           </layout>
          </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="buttonsFrame">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>60</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
+         </property>
+         <layout class="QVBoxLayout" name="verticalButtonsLayout">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="leftMargin">
+           <number>2</number>
+          </property>
+          <property name="topMargin">
+           <number>30</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="separatePlotsButton">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Раздельные\nграфики</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="combinedPlotButton">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Общий\nграфик</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="tableViewButton">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Таблица</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
