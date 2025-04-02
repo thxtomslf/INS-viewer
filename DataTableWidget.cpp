@@ -1,9 +1,11 @@
 #include "DataTableWidget.h"
 #include <QScrollBar>
 #include <QHeaderView>
+#include <QApplication>
 
 DataTableWidget::DataTableWidget(QWidget *parent)
     : QWidget(parent)
+    , updatesEnabled_(true)
 {
     layout_ = new QVBoxLayout(this);
     setupTable();
@@ -12,10 +14,14 @@ DataTableWidget::DataTableWidget(QWidget *parent)
 void DataTableWidget::setupTable()
 {
     table_ = new QTableWidget(this);
-    table_->setColumnCount(1); // Первая колонка для временных меток
+    table_->setColumnCount(1);
     table_->setHorizontalHeaderItem(0, new QTableWidgetItem("Время"));
     
-    // Настройка таблицы
+    // Оптимизация производительности таблицы
+    table_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    table_->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    table_->setShowGrid(false); // Отключаем отрисовку сетки для повышения производительности
+    
     table_->setAlternatingRowColors(true);
     table_->setSelectionBehavior(QAbstractItemView::SelectRows);
     table_->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -23,7 +29,6 @@ void DataTableWidget::setupTable()
     table_->horizontalHeader()->setStretchLastSection(true);
     table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     
-    // Добавляем таблицу в layout
     layout_->addWidget(table_);
 }
 
@@ -44,23 +49,21 @@ void DataTableWidget::addDataColumn(const QString &label,
     resizeColumnsToContents();
 }
 
-void DataTableWidget::addPoint(const QDateTime &timestamp, const std::vector<double> &values)
+void DataTableWidget::addPoint(const QDateTime &timestamp, 
+                             const std::vector<double> &values)
 {
-    if (values.size() != dataBuffers_.size()) {
+    if (!updatesEnabled_ || values.size() != dataBuffers_.size()) {
         return;
     }
 
-    // Добавляем новую строку
     int newRow = table_->rowCount();
     table_->insertRow(newRow);
 
-    // Добавляем временную метку
     QTableWidgetItem *timeItem = new QTableWidgetItem(
         timestamp.toString("yyyy-MM-dd HH:mm:ss.zzz")
     );
     table_->setItem(newRow, 0, timeItem);
 
-    // Добавляем значения
     for (size_t i = 0; i < values.size(); ++i) {
         QTableWidgetItem *valueItem = new QTableWidgetItem(
             QString::number(values[i], 'f', 3)
@@ -74,8 +77,11 @@ void DataTableWidget::addPoint(const QDateTime &timestamp, const std::vector<dou
         dataBuffers_[i].addPoint(timestamp, values[i]);
     }
 
-    // Прокручиваем к последней строке
-    table_->scrollToBottom();
+    // Прокручиваем к последней строке только если пользователь уже находится внизу
+    QScrollBar* vScrollBar = table_->verticalScrollBar();
+    if (vScrollBar->value() == vScrollBar->maximum()) {
+        table_->scrollToBottom();
+    }
 }
 
 void DataTableWidget::updateTable()
@@ -142,41 +148,68 @@ void DataTableWidget::updateFromBuffers(const std::vector<DynamicPlotBuffer> &bu
         return;
     }
 
+    // Временно отключаем обновления UI
+    table_->setUpdatesEnabled(false);
+    updatesEnabled_ = false;
+
     // Очищаем таблицу
     table_->setRowCount(0);
 
-    // Получаем данные из первого буфера для определения количества строк
+    // Получаем общее количество строк
     auto firstBufferData = buffers[0].getData();
+    int totalRows = firstBufferData.size();
     
-    // Добавляем строки
-    for (int i = 0; i < firstBufferData.size(); ++i) {
-        table_->insertRow(i);
-        
-        // Добавляем временную метку
-        QTableWidgetItem *timeItem = new QTableWidgetItem(
-            firstBufferData[i].first.toString("yyyy-MM-dd HH:mm:ss.zzz")
-        );
-        table_->setItem(i, 0, timeItem);
+    // Устанавливаем количество строк сразу
+    table_->setRowCount(totalRows);
 
-        // Добавляем значения из каждого буфера
-        for (size_t j = 0; j < buffers.size(); ++j) {
-            auto data = buffers[j].getData();
-            if (i < data.size()) {
-                QTableWidgetItem *valueItem = new QTableWidgetItem(
-                    QString::number(data[i].second, 'f', 3)
-                );
-                valueItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-                table_->setItem(i, j + 1, valueItem);
-            }
-        }
+    // Загружаем данные пакетами
+    for (int i = 0; i < totalRows; i += BATCH_SIZE) {
+        int batchSize = std::min(BATCH_SIZE, totalRows - i);
+        loadDataBatch(buffers, i, batchSize);
+        
+        // Даем возможность обработать события UI
+        QApplication::processEvents();
     }
 
     // Обновляем буферы
     dataBuffers_ = buffers;
 
+    // Включаем обновления UI
+    table_->setUpdatesEnabled(true);
+    updatesEnabled_ = true;
+
     // Прокручиваем к последней строке
-    if (table_->rowCount() > 0) {
+    if (totalRows > 0) {
         table_->scrollToBottom();
+    }
+}
+
+void DataTableWidget::loadDataBatch(const std::vector<DynamicPlotBuffer> &buffers, 
+                                  int startRow, int count)
+{
+    auto firstBufferData = buffers[0].getData();
+    
+    for (int i = 0; i < count; ++i) {
+        int currentRow = startRow + i;
+        if (currentRow >= firstBufferData.size()) break;
+
+        // Добавляем временную метку
+        QTableWidgetItem *timeItem = new QTableWidgetItem(
+            firstBufferData[currentRow].first.toString("yyyy-MM-dd HH:mm:ss.zzz")
+        );
+        table_->setItem(currentRow, 0, timeItem);
+
+        // Добавляем значения из каждого буфера
+        for (size_t j = 0; j < buffers.size(); ++j) {
+            auto data = buffers[j].getData();
+            if (currentRow < data.size()) {
+                QTableWidgetItem *valueItem = new QTableWidgetItem(
+                    QString::number(data[currentRow].second, 'f', 3)
+                );
+                valueItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                table_->setItem(currentRow, j + 1, valueItem);
+            }
+        }
     }
 }
 

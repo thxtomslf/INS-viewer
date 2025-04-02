@@ -25,14 +25,17 @@ public:
     void updateFromBuffers(const std::vector<DynamicPlotBuffer> &buffers);
 
 private:
+    void loadDataBatch(const std::vector<DynamicPlotBuffer> &buffers, int startRow, int count);
     void setupTable();
     void updateTable();
     void resizeColumnsToContents();
 
+    int BATCH_SIZE = 1000; // Размер пакета для загрузки
     QTableWidget *table_;
     QVBoxLayout *layout_;
     std::vector<QString> columnLabels_;
     std::vector<DynamicPlotBuffer> dataBuffers_;
+    bool updatesEnabled_;
 };
 
 #endif // DATATABLEWIDGET_H 
