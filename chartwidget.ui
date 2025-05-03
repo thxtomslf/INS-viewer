@@ -116,10 +116,7 @@
    <item>
     <widget class="QSplitter" name="mainSplitter">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding"/>
      </property>
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>
@@ -271,6 +268,9 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="topButtonsLayout">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetFixedSize</enum>
+     </property>
      <item>
       <widget class="ToggleButton" name="startToggleButton" native="true">
        <property name="maximumSize">
