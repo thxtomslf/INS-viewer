@@ -15,13 +15,12 @@ class MultiLinePlot : public QWidget
     Q_OBJECT
 
 public:
-    explicit MultiLinePlot(QWidget *parent = nullptr);
+    explicit MultiLinePlot(QWidget *parent = nullptr, 
+                          const std::vector<DynamicPlotBuffer*>& buffers = {});
 
     void addGraph(const QString &label, 
-                 std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                  std::shared_ptr<DynamicSetting<int>> plotSize);
-    
-    void addPoint(const QDateTime &time, const std::vector<double> &values);
+
     void clear();
     
     void plotSensorData(
@@ -32,8 +31,8 @@ public:
         >> &extractors);
 
     QList<QList<QPair<QDateTime, double>>> getAllData();
-
-    void updateFromBuffers(const std::vector<DynamicPlotBuffer> &buffers);
+    void update();
+    void updateBuffers(const std::vector<DynamicPlotBuffer*>& newBuffers);
 
 private:
     void setupPlot();
@@ -41,15 +40,14 @@ private:
     void updatePlotSize(int newSize);
 
     QCustomPlot *customPlot_;
-    std::vector<DynamicPlotBuffer> buffers_;
+    std::vector<DynamicPlotBuffer*> buffers_;
     std::vector<QString> labels_;
     std::shared_ptr<DynamicSetting<int>> plotSize_;
 
     // Цвета для графиков
     const QVector<QColor> colors_ = {
-        Qt::red, Qt::blue, Qt::green,
-        Qt::cyan, Qt::magenta, Qt::yellow,
-        Qt::black, Qt::darkRed, Qt::darkBlue,
+        Qt::red, Qt::blue,
+        Qt::darkRed, Qt::darkBlue,
         Qt::darkGreen, Qt::darkCyan, Qt::darkMagenta
     };
 };

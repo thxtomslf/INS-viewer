@@ -39,6 +39,9 @@ public:
 
     void addPoint(const QDateTime &timestamp, const std::vector<double> &values);
     QList<QList<QPair<QDateTime, double>>> getAllData() const;
+
+private:
+    void onMaxBufferSizeChanged(int newSize);
     
 private:
     void setupLayout();
@@ -60,7 +63,7 @@ private:
     std::vector<std::shared_ptr<DynamicSetting<int>>> plotSizes_;
 
     // Общее хранилище данных для всех режимов отображения
-    std::vector<DynamicPlotBuffer> dataBuffers_;
+    std::vector<DynamicPlotBuffer*> dataBuffers_;
 };
 
 #endif // DYNAMICPLOTSGROUP_H 

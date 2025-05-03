@@ -1,8 +1,9 @@
 #include "multilineplot.h"
 #include <QVBoxLayout>
 
-MultiLinePlot::MultiLinePlot(QWidget *parent)
+MultiLinePlot::MultiLinePlot(QWidget *parent, const std::vector<DynamicPlotBuffer*>& buffers)
     : QWidget(parent)
+    , buffers_(buffers)
 {
     setupPlot();
 }
@@ -29,7 +30,6 @@ void MultiLinePlot::setupPlot()
 }
 
 void MultiLinePlot::addGraph(const QString &label,
-                           std::shared_ptr<DynamicSetting<int>> plotBufferSize,
                            std::shared_ptr<DynamicSetting<int>> plotSize)
 {
     // Создаем новый график
@@ -42,7 +42,6 @@ void MultiLinePlot::addGraph(const QString &label,
     graph->setLineStyle(QCPGraph::lsLine);
 
     // Добавляем буфер для данных
-    buffers_.emplace_back(plotBufferSize);
     labels_.push_back(label);
 
     // Сохраняем настройку размера графика
@@ -55,34 +54,13 @@ void MultiLinePlot::addGraph(const QString &label,
     }
 }
 
-void MultiLinePlot::addPoint(const QDateTime &time, const std::vector<double> &values)
-{
-    if (values.size() != buffers_.size()) {
-        qDebug() << "Error: Number of values doesn't match number of graphs";
-        return;
-    }
-
-    double key = time.toMSecsSinceEpoch() / 1000.0;
-
-    for (size_t i = 0; i < values.size(); ++i) {
-        buffers_[i].addPoint(time, values[i]);
-        
-        QVector<double> timeData = buffers_[i].getVisibleTimeData();
-        QVector<double> valueData = buffers_[i].getVisibleData();
-        
-        customPlot_->graph(i)->setData(timeData, valueData);
-    }
-
-    // Обновляем отображение
-    customPlot_->rescaleAxes();
-    customPlot_->replot();
-}
-
 void MultiLinePlot::clear()
 {
     for (size_t i = 0; i < buffers_.size(); ++i) {
-        buffers_[i].clear();
-        customPlot_->graph(i)->data()->clear();
+        if (buffers_[i] && i < customPlot_->graphCount()) {
+            buffers_[i]->clear();
+            customPlot_->graph(i)->data()->clear();
+        }
     }
     customPlot_->replot();
 }
@@ -130,7 +108,7 @@ QList<QList<QPair<QDateTime, double>>> MultiLinePlot::getAllData()
     QList<QList<QPair<QDateTime, double>>> allData;
     
     for (size_t i = 0; i < buffers_.size(); ++i) {
-        allData.append(buffers_[i].getData());
+        allData.append(buffers_[i]->getData());
     }
     
     return allData;
@@ -141,18 +119,26 @@ void MultiLinePlot::updatePlotSize(int newSize)
     customPlot_->setMinimumSize(newSize, newSize);
 }
 
-void MultiLinePlot::updateFromBuffers(const std::vector<DynamicPlotBuffer> &buffers)
+void MultiLinePlot::update()
 {
-    if (buffers.size() != static_cast<size_t>(customPlot_->graphCount())) {
+    if (buffers_.empty()) {
         return;
     }
 
-    for (size_t i = 0; i < buffers.size(); ++i) {
-        QVector<double> timeData = buffers[i].getVisibleTimeData();
-        QVector<double> valueData = buffers[i].getVisibleData();
-        customPlot_->graph(i)->setData(timeData, valueData);
+    for (size_t i = 0; i < buffers_.size(); ++i) {
+        if (buffers_[i] && i < customPlot_->graphCount()) {
+            QVector<double> timeData = buffers_[i]->getVisibleTimeData();
+            QVector<double> valueData = buffers_[i]->getVisibleData();
+            customPlot_->graph(i)->setData(timeData, valueData);
+        }
     }
 
     customPlot_->rescaleAxes();
     customPlot_->replot();
+}
+
+void MultiLinePlot::updateBuffers(const std::vector<DynamicPlotBuffer*>& newBuffers)
+{
+    buffers_ = newBuffers;
+    update();
 } 

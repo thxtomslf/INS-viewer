@@ -4,10 +4,9 @@ DynamicPlotsGroup::DynamicPlotsGroup(QWidget *parent)
     : QWidget(parent)
     , currentMode_(DynamicPlotsGroup::SEPARATE_PLOTS)
     , multiLinePlot_(nullptr)
+    , tableWidget_(nullptr)
 {
     setupLayout();
-    tableWidget_ = new DataTableWidget(contentWidget_);
-    contentLayout_->addWidget(tableWidget_);
 }
 
 void DynamicPlotsGroup::setupLayout()
@@ -41,19 +40,40 @@ void DynamicPlotsGroup::addPlot(const QString &label,
     plotBufferSizes_.push_back(plotBufferSize);
     plotSizes_.push_back(plotSize);
 
-    dataBuffers_.emplace_back(plotBufferSize);
+    plotBufferSize->setOnUpdateCallback([this] (int newSize) -> void {
+        onMaxBufferSizeChanged(newSize);
+    });
 
+    // Создаем новый буфер
+    dataBuffers_.push_back(new DynamicPlotBuffer(plotBufferSize));
+
+    if (!tableWidget_) {
+        tableWidget_ = new DataTableWidget(contentWidget_, dataBuffers_);
+        contentLayout_->addWidget(tableWidget_);
+    } else {
+        tableWidget_->updateBuffers(dataBuffers_);
+    }
+
+    // Добавляем колонку в таблицу
     tableWidget_->addDataColumn(label, plotBufferSize);
+    tableWidget_->update();
 
-    auto plot = new DynamicPlot(contentWidget_, plotBufferSize);
+    // Создаем новый график
+    auto plot = new DynamicPlot(contentWidget_, dataBuffers_.back());
     plot->setPlotSize(plotSize);
     plot->setLabel(label);
     
     plots_.push_back(plot);
+
+    // Создаем MultiLinePlot если его еще нет
     if (!multiLinePlot_) {
-        multiLinePlot_ = new MultiLinePlot(contentWidget_);
+        multiLinePlot_ = new MultiLinePlot(contentWidget_, dataBuffers_);
+        contentLayout_->addWidget(multiLinePlot_);
+    } else {
+        // Обновляем буферы в существующем MultiLinePlot
+        multiLinePlot_->updateBuffers(dataBuffers_);
     }
-    multiLinePlot_->addGraph(label, plotBufferSize, plotSize);
+    multiLinePlot_->addGraph(label, plotSize);
 
     updateLayout();
 }
@@ -61,7 +81,7 @@ void DynamicPlotsGroup::addPlot(const QString &label,
 void DynamicPlotsGroup::clear()
 {
     for (auto &buffer : dataBuffers_) {
-        buffer.clear();
+        buffer->clear();
     }
     
     updateDisplayedData();
@@ -75,13 +95,13 @@ void DynamicPlotsGroup::plotSensorData(
     >> &extractors)
 {
     for (auto &buffer : dataBuffers_) {
-        buffer.clear();
+        buffer->clear();
     }
 
     for (const auto &data : dataList) {
         for (size_t i = 0; i < extractors.size() && i < dataBuffers_.size(); ++i) {
             if (extractors[i].second(data)) {
-                dataBuffers_[i].addPoint(data.getTimestamp(), extractors[i].first(data));
+                dataBuffers_[i]->addPoint(data.getTimestamp(), extractors[i].first(data));
             }
         }
     }
@@ -99,8 +119,8 @@ QList<QList<QPair<QDateTime, double>>> DynamicPlotsGroup::getAllData() const
         QList<QPair<QDateTime, double>> plotData;
         
         // Получаем все временные метки и значения из буфера
-        QVector<double> times = buffer.getVisibleTimeData();
-        QVector<double> values = buffer.getVisibleData();
+        QVector<double> times = buffer->getVisibleTimeData();
+        QVector<double> values = buffer->getVisibleData();
         
         // Преобразуем временные метки из Unix timestamp в QDateTime
         for (int i = 0; i < times.size(); ++i) {
@@ -135,7 +155,7 @@ void DynamicPlotsGroup::updateLayout()
         delete child;
     }
 
-    // Показываем нужный виджет
+    // Показываем нужный     виджет
     switch (currentMode_) {
         case TABLE_VIEW:
             if (tableWidget_) {
@@ -166,17 +186,17 @@ void DynamicPlotsGroup::updateDisplayedData()
     switch (currentMode_) {
         case TABLE_VIEW:
             if (tableWidget_) {
-                tableWidget_->updateFromBuffers(dataBuffers_);
+                tableWidget_->update();
             }
             break;
         case SEPARATE_PLOTS:
-            for (size_t i = 0; i < plots_.size(); ++i) {
-                plots_[i]->updateFromBuffer(dataBuffers_[i]);
+            for (auto plot : plots_) {
+                plot->update();
             }
             break;
         case COMBINED_PLOT:
             if (multiLinePlot_) {
-                multiLinePlot_->updateFromBuffers(dataBuffers_);
+                multiLinePlot_->update();
             }
             break;
     }
@@ -191,25 +211,39 @@ void DynamicPlotsGroup::addPoint(const QDateTime &timestamp, const std::vector<d
 
     // Добавляем данные в буферы
     for (size_t i = 0; i < dataBuffers_.size(); ++i) {
-        dataBuffers_[i].addPoint(timestamp, values[i]);
+        dataBuffers_[i]->addPoint(timestamp, values[i]);
     }
 
     // Обновляем отображение в зависимости от текущего режима
     switch (currentMode_) {
         case TABLE_VIEW:
             if (tableWidget_) {
-                tableWidget_->addPoint(timestamp, values);
+                tableWidget_->update(timestamp, values);
             }
             break;
         case SEPARATE_PLOTS:
-            for (size_t i = 0; i < plots_.size(); ++i) {
-                plots_[i]->updateFromBuffer(dataBuffers_[i]);
+            for (auto plot : plots_) {
+                plot->update();
             }
             break;
         case COMBINED_PLOT:
             if (multiLinePlot_) {
-                multiLinePlot_->updateFromBuffers(dataBuffers_);
+                multiLinePlot_->update();
             }
             break;
     }
 }
+
+void DynamicPlotsGroup::onMaxBufferSizeChanged(int newSize)
+{
+    if (tableWidget_) {
+        tableWidget_->clear();
+    }
+    for (auto plot : plots_) {
+        plot->clear();
+    }
+    if (multiLinePlot_) {
+        multiLinePlot_->clear();
+    }
+}
+

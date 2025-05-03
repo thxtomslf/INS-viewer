@@ -5,13 +5,11 @@
 #include <QApplication>
 #include <QScrollArea>
 
-DynamicPlot::DynamicPlot(QWidget *parent, std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting)
+DynamicPlot::DynamicPlot(QWidget *parent,
+                        DynamicPlotBuffer* buffer)
     : QWidget(parent)
+    , buffer_(buffer)
 {
-    if (maxBufferSizeSetting) {
-        setMaxBufferSize(maxBufferSizeSetting);
-    }
-
     customPlot_ = new QCustomPlot(this);
 
     graph_ = customPlot_->addGraph();
@@ -42,20 +40,13 @@ void DynamicPlot::setPlotSize(std::shared_ptr<DynamicSetting<int>> plotSize) {
     });
 }
 
-void DynamicPlot::setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting) {
-    buffer_.setMaxBufferSize(maxBufferSizeSetting);
-    maxBufferSizeSetting.get()->setOnUpdateCallback([this](int newValue) {
-        onMaxBufferSizeChanged(newValue);
-    });
-}
-
 void DynamicPlot::clear()
 {
     // Очистка данных графика
     graph_->data()->clear();
 
     // Сброс буферов
-    buffer_.clear();
+    buffer_->clear();
 
     // Перерисовка графика
     customPlot_->replot();
@@ -72,15 +63,17 @@ void DynamicPlot::setLabel(const QString &title) {
 
 void DynamicPlot::addPoint(const QDateTime& time, double value)
 {
-    buffer_.addPoint(time, value);
+    if (buffer_) {
+        buffer_->addPoint(time, value);
 
-    QVector<double> visibleTimeData = buffer_.getVisibleTimeData();
-    QVector<double> visibleValueData = buffer_.getVisibleData();
+        QVector<double> visibleTimeData = buffer_->getVisibleTimeData();
+        QVector<double> visibleValueData = buffer_->getVisibleData();
 
-    graph_->setData(visibleTimeData, visibleValueData);
-    customPlot_->xAxis->setRange(visibleTimeData.first(), visibleTimeData.last());
-    customPlot_->rescaleAxes(true);
-    customPlot_->replot();
+        graph_->setData(visibleTimeData, visibleValueData);
+        customPlot_->xAxis->setRange(visibleTimeData.first(), visibleTimeData.last());
+        customPlot_->rescaleAxes(true);
+        customPlot_->replot();
+    }
 }
 
 void DynamicPlot::plotSensorData(
@@ -110,11 +103,6 @@ void DynamicPlot::plotSensorData(
     customPlot_->replot();
 }
 
-void DynamicPlot::onMaxBufferSizeChanged(int newSize)
-{
-    clear();
-}
-
 QList<QPair<QDateTime, double>> DynamicPlot::getData()
 {
     QList<QPair<QDateTime, double>> dataList;
@@ -135,10 +123,14 @@ QList<QPair<QDateTime, double>> DynamicPlot::getData()
     return dataList;
 }
 
-void DynamicPlot::updateFromBuffer(const DynamicPlotBuffer &buffer)
+void DynamicPlot::update()
 {
-    QVector<double> timeData = buffer.getVisibleTimeData();
-    QVector<double> valueData = buffer.getVisibleData();
+    if (!buffer_) {
+        return;
+    }
+
+    QVector<double> timeData = buffer_->getVisibleTimeData();
+    QVector<double> valueData = buffer_->getVisibleData();
     
     graph_->setData(timeData, valueData);
     if (!timeData.isEmpty()) {

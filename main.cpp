@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     DynamicSettingsFabric<int> generalSettings;
     generalSettings.setGroupName("Общие настройки");
     
+    std::shared_ptr<DynamicSetting<int>> plotBufferSize = generalSettings.createSetting("Размер буфера графика", 500);
     std::shared_ptr<DynamicSetting<int>> plotSize = generalSettings.createSetting("Размер графика", 300);
     std::shared_ptr<DynamicSetting<int>> measuresPrecision = generalSettings.createSetting("Точность сохранения измерений", 2);
 
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
         measuresPrecision,
         isMagnetoMeasuresEnabled,
         measuresPrecision);
-    ChartWidget *chartWidget = new ChartWidget(processor, nullptr, plotSize, fileStorageManager);
+    ChartWidget *chartWidget = new ChartWidget(processor, plotBufferSize, plotSize, fileStorageManager);
 
     PageRouter::instance().registerWidget(Page::Graphics, chartWidget);
 

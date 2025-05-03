@@ -3,9 +3,10 @@
 #include <QHeaderView>
 #include <QApplication>
 
-DataTableWidget::DataTableWidget(QWidget *parent)
+DataTableWidget::DataTableWidget(QWidget *parent, const std::vector<DynamicPlotBuffer*>& buffers)
     : QWidget(parent)
     , updatesEnabled_(true)
+    , dataBuffers_(buffers)
 {
     layout_ = new QVBoxLayout(this);
     setupTable();
@@ -43,14 +44,34 @@ void DataTableWidget::addDataColumn(const QString &label,
     // Сохраняем метку
     columnLabels_.push_back(label);
     
-    // Создаем новый буфер данных
-    dataBuffers_.emplace_back(bufferSize);
-    
     resizeColumnsToContents();
 }
 
-void DataTableWidget::addPoint(const QDateTime &timestamp, 
-                             const std::vector<double> &values)
+void DataTableWidget::clear()
+{
+    table_->setRowCount(0);
+    for (auto buffer : dataBuffers_) {
+        if (buffer) {
+            buffer->clear();
+        }
+    }
+}
+
+QList<QList<QPair<QDateTime, double>>> DataTableWidget::getAllData() const
+{
+    QList<QList<QPair<QDateTime, double>>> result;
+    
+    for (const auto &buffer : dataBuffers_) {
+        if (buffer) {
+            QList<QPair<QDateTime, double>> columnData = buffer->getData();
+            result.append(columnData);
+        }
+    }
+    
+    return result;
+}
+
+void DataTableWidget::update(const QDateTime &timestamp, const std::vector<double> &values)
 {
     if (!updatesEnabled_ || values.size() != dataBuffers_.size()) {
         return;
@@ -66,15 +87,10 @@ void DataTableWidget::addPoint(const QDateTime &timestamp,
 
     for (size_t i = 0; i < values.size(); ++i) {
         QTableWidgetItem *valueItem = new QTableWidgetItem(
-            QString::number(values[i], 'f', 3)
+            QString::number(values[i], 'f', 6)
         );
         valueItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         table_->setItem(newRow, i + 1, valueItem);
-    }
-
-    // Добавляем данные в буферы
-    for (size_t i = 0; i < values.size(); ++i) {
-        dataBuffers_[i].addPoint(timestamp, values[i]);
     }
 
     // Прокручиваем к последней строке только если пользователь уже находится внизу
@@ -84,67 +100,9 @@ void DataTableWidget::addPoint(const QDateTime &timestamp,
     }
 }
 
-void DataTableWidget::updateTable()
+void DataTableWidget::update()
 {
     if (dataBuffers_.empty()) {
-        return;
-    }
-
-    // Получаем данные из первого буфера для определения количества строк
-    auto firstBufferData = dataBuffers_[0].getData();
-    int rowCount = firstBufferData.size();
-    
-    table_->setRowCount(rowCount);
-
-    // Заполняем временные метки
-    for (int row = 0; row < rowCount; ++row) {
-        QTableWidgetItem *timeItem = new QTableWidgetItem(
-            firstBufferData[row].first.toString("yyyy-MM-dd HH:mm:ss.zzz")
-        );
-        table_->setItem(row, 0, timeItem);
-    }
-
-    // Заполняем значения для каждого буфера
-    for (size_t col = 0; col < dataBuffers_.size(); ++col) {
-        auto data = dataBuffers_[col].getData();
-        for (int row = 0; row < rowCount; ++row) {
-            QTableWidgetItem *valueItem = new QTableWidgetItem(
-                QString::number(data[row].second, 'f', 3)
-            );
-            valueItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-            table_->setItem(row, col + 1, valueItem);
-        }
-    }
-
-    // Прокручиваем к последней строке
-    table_->scrollToBottom();
-    
-    resizeColumnsToContents();
-}
-
-void DataTableWidget::clear()
-{
-    table_->setRowCount(0);
-    for (auto &buffer : dataBuffers_) {
-        buffer.clear();
-    }
-}
-
-QList<QList<QPair<QDateTime, double>>> DataTableWidget::getAllData() const
-{
-    QList<QList<QPair<QDateTime, double>>> result;
-    
-    for (const auto &buffer : dataBuffers_) {
-        QList<QPair<QDateTime, double>> columnData = buffer.getData();
-        result.append(columnData);
-    }
-    
-    return result;
-}
-
-void DataTableWidget::updateFromBuffers(const std::vector<DynamicPlotBuffer> &buffers)
-{
-    if (buffers.empty() || buffers.size() != dataBuffers_.size()) {
         return;
     }
 
@@ -156,23 +114,20 @@ void DataTableWidget::updateFromBuffers(const std::vector<DynamicPlotBuffer> &bu
     table_->setRowCount(0);
 
     // Получаем общее количество строк
-    auto firstBufferData = buffers[0].getData();
+    auto firstBufferData = dataBuffers_[0]->getData();
     int totalRows = firstBufferData.size();
-    
+
     // Устанавливаем количество строк сразу
     table_->setRowCount(totalRows);
 
     // Загружаем данные пакетами
     for (int i = 0; i < totalRows; i += BATCH_SIZE) {
         int batchSize = std::min(BATCH_SIZE, totalRows - i);
-        loadDataBatch(buffers, i, batchSize);
-        
+        loadDataBatch(i, batchSize);
+
         // Даем возможность обработать события UI
         QApplication::processEvents();
     }
-
-    // Обновляем буферы
-    dataBuffers_ = buffers;
 
     // Включаем обновления UI
     table_->setUpdatesEnabled(true);
@@ -182,13 +137,15 @@ void DataTableWidget::updateFromBuffers(const std::vector<DynamicPlotBuffer> &bu
     if (totalRows > 0) {
         table_->scrollToBottom();
     }
+
+    // Обновляем размеры колонок
+    resizeColumnsToContents();
 }
 
-void DataTableWidget::loadDataBatch(const std::vector<DynamicPlotBuffer> &buffers, 
-                                  int startRow, int count)
+void DataTableWidget::loadDataBatch(int startRow, int count)
 {
-    auto firstBufferData = buffers[0].getData();
-    
+    auto firstBufferData = dataBuffers_[0]->getData();
+
     for (int i = 0; i < count; ++i) {
         int currentRow = startRow + i;
         if (currentRow >= firstBufferData.size()) break;
@@ -200,11 +157,11 @@ void DataTableWidget::loadDataBatch(const std::vector<DynamicPlotBuffer> &buffer
         table_->setItem(currentRow, 0, timeItem);
 
         // Добавляем значения из каждого буфера
-        for (size_t j = 0; j < buffers.size(); ++j) {
-            auto data = buffers[j].getData();
+        for (size_t j = 0; j < dataBuffers_.size(); ++j) {
+            auto data = dataBuffers_[j]->getData();
             if (currentRow < data.size()) {
                 QTableWidgetItem *valueItem = new QTableWidgetItem(
-                    QString::number(data[currentRow].second, 'f', 3)
+                    QString::number(data[currentRow].second, 'f', 6)
                 );
                 valueItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
                 table_->setItem(currentRow, j + 1, valueItem);
@@ -219,3 +176,11 @@ void DataTableWidget::resizeColumnsToContents()
         table_->resizeColumnToContents(i);
     }
 }
+
+void DataTableWidget::updateBuffers(const std::vector<DynamicPlotBuffer*>& newBuffers)
+{
+    dataBuffers_ = newBuffers;
+    update();
+}
+
+

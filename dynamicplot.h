@@ -17,11 +17,11 @@ class DynamicPlot : public QWidget
     Q_OBJECT
 
 public:
-    explicit DynamicPlot(QWidget *parent = nullptr, std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting = nullptr);
+    explicit DynamicPlot(QWidget *parent = nullptr,
+                        DynamicPlotBuffer* buffer = nullptr);
 
     void addPoint(const QDateTime& time, double value);
     void setLabel(const QString &title);
-    void setMaxBufferSize(std::shared_ptr<DynamicSetting<int>> maxBufferSizeSetting);
     void setPlotSize(std::shared_ptr<DynamicSetting<int>> plotWidth);
     void clear();
     void plotSensorData(
@@ -29,20 +29,17 @@ public:
         std::function<double(const TimestampedSensorData&)> valueExtractor,
         std::function<bool(const TimestampedSensorData&)> shouldPlot = [](const TimestampedSensorData&) { return true; });
     QList<QPair<QDateTime, double>> getData();
-    void updateFromBuffer(const DynamicPlotBuffer &buffer);
+    void update();
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
 
-private slots:
-    void onMaxBufferSizeChanged(int newSize);
-
 private:
     QCustomPlot *customPlot_;
     QCPGraph *graph_;
 
-    DynamicPlotBuffer buffer_;
+    DynamicPlotBuffer* buffer_;
     std::shared_ptr<DynamicSetting<int>> plotSize;
 
     bool shouldHandleWheelEvent(QWheelEvent *event) const;
