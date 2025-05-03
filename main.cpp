@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     DynamicSettingsFabric<int> generalSettings;
     generalSettings.setGroupName("Общие настройки");
     
-    std::shared_ptr<DynamicSetting<int>> plotBufferSize = generalSettings.createSetting("Размер буффера графиков", 500);
     std::shared_ptr<DynamicSetting<int>> plotSize = generalSettings.createSetting("Размер графика", 300);
+    std::shared_ptr<DynamicSetting<int>> measuresPrecision = generalSettings.createSetting("Точность сохранения измерений", 2);
 
     settingsFabrics.push_back(generalSettings);
 
@@ -40,8 +40,7 @@ int main(int argc, char *argv[])
     accelerometrSettings.setGroupName(groupName);
     accelerometrSettingsBoolean.setGroupName(groupName);
 
-    std::shared_ptr<DynamicSetting<bool>> isAcceleroMeasuresEnabled = accelerometrSettingsBoolean.createSetting("Вкл/выкл", true);
-    std::shared_ptr<DynamicSetting<int>> acceleroMeasuresPrecision = accelerometrSettings.createSetting("Число точек после запятой", 2);
+    std::shared_ptr<DynamicSetting<bool>> isAcceleroMeasuresEnabled = accelerometrSettingsBoolean.createSetting("Запись в файл", true);
 
     groupName = "Гироскоп";
     DynamicSettingsFabric<int> gyroscopeSettings;
@@ -49,8 +48,7 @@ int main(int argc, char *argv[])
     gyroscopeSettings.setGroupName(groupName);
     gyroscopeSettingsBoolean.setGroupName(groupName);   
 
-    std::shared_ptr<DynamicSetting<bool>> isGyroMeasuresEnabled = gyroscopeSettingsBoolean.createSetting("Вкл/выкл", true);
-    std::shared_ptr<DynamicSetting<int>> gyroMeasuresPrecision = gyroscopeSettings.createSetting("Число точек после запятой", 2);
+    std::shared_ptr<DynamicSetting<bool>> isGyroMeasuresEnabled = gyroscopeSettingsBoolean.createSetting("Запись в файл", true);
 
     groupName = "Магнитометр";
     DynamicSettingsFabric<int> magnetometerSettings;
@@ -58,18 +56,16 @@ int main(int argc, char *argv[])
     magnetometerSettings.setGroupName(groupName);
     magnetometerSettingsBoolean.setGroupName(groupName);
 
-    std::shared_ptr<DynamicSetting<bool>> isMagnetoMeasuresEnabled = magnetometerSettingsBoolean.createSetting("Вкл/выкл", true);
-    std::shared_ptr<DynamicSetting<int>> magnetoMeasuresPrecision = magnetometerSettings.createSetting("Число точек после запятой", 2);
-    
+    std::shared_ptr<DynamicSetting<bool>> isMagnetoMeasuresEnabled = magnetometerSettingsBoolean.createSetting("Запись в файл", true);
+
     groupName = "Окружающая среда";
     DynamicSettingsFabric<int> envSettings;
     DynamicSettingsFabric<bool> envSettingsBoolean;
     envSettings.setGroupName(groupName);
     envSettingsBoolean.setGroupName(groupName);
 
-    std::shared_ptr<DynamicSetting<bool>> isEnvMeasuresEnabled = envSettingsBoolean.createSetting("Вкл/выкл", true);
-    std::shared_ptr<DynamicSetting<int>> envMeasuresPrecision = envSettings.createSetting("Число точек после запятой", 2);
-    
+    std::shared_ptr<DynamicSetting<bool>> isEnvMeasuresEnabled = envSettingsBoolean.createSetting("Запись в файл", true);
+
     settingsFabrics.push_back(accelerometrSettings);
     settingsFabrics.push_back(gyroscopeSettings);
     settingsFabrics.push_back(magnetometerSettings);
@@ -104,14 +100,14 @@ int main(int argc, char *argv[])
     InsCommandProcessor *processor = new InsCommandProcessor();
     FileStorageManager *fileStorageManager = new FileStorageManager(
         isEnvMeasuresEnabled,
-        envMeasuresPrecision,
+        measuresPrecision,
         isGyroMeasuresEnabled,
-        gyroMeasuresPrecision,
+        measuresPrecision,
         isAcceleroMeasuresEnabled,
-        acceleroMeasuresPrecision,
+        measuresPrecision,
         isMagnetoMeasuresEnabled,
-        magnetoMeasuresPrecision);
-    ChartWidget *chartWidget = new ChartWidget(processor, plotBufferSize, plotSize, fileStorageManager);
+        measuresPrecision);
+    ChartWidget *chartWidget = new ChartWidget(processor, nullptr, plotSize, fileStorageManager);
 
     PageRouter::instance().registerWidget(Page::Graphics, chartWidget);
 

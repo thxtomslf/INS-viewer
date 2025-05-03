@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QDebug>
+#include <QMessageBox>
 
 SettingsWidget::SettingsWidget(
     const std::vector<DynamicSettingsFabric<int>> &numericFabrics,
@@ -108,13 +109,40 @@ QString SettingsWidget::buildSettingName(const QString &groupName, const QString
 
 void SettingsWidget::applySettings()
 {
-    for (auto it = lineEdits_.begin(); it != lineEdits_.end(); ++it) {
-        const QString &name = it.key();
-        QLineEdit *lineEdit = it.value();
-        bool ok;
-        int value = lineEdit->text().toInt(&ok);
-        if (ok) {
-            for (auto &fabric : numericFabrics) {
+    try {
+        for (auto it = lineEdits_.begin(); it != lineEdits_.end(); ++it) {
+            const QString &name = it.key();
+            QLineEdit *lineEdit = it.value();
+            bool ok;
+            int value = lineEdit->text().toInt(&ok);
+            if (ok) {
+                for (auto &fabric : numericFabrics) {
+                    if (fabric.getGroupName() != name.split("_").first().toStdString()) {
+                        continue;
+                    }
+
+                    auto setting = fabric.getSetting(name.split("_").last().toStdString());
+                    if (setting) {
+                        if (setting->get() != value) { // Check if the value has changed
+                            try {
+                                setting->set(value);
+                            } catch (const std::invalid_argument &e) {
+                                qDebug() << "Invalid value for setting" << name << ":" << e.what();
+                            }
+                        }
+                        break;
+                    } else {
+                        qDebug() << "Setting" << name.toUtf8() << "not found";
+                    }
+                }
+            }
+        }
+
+        for (auto it = checkBoxes_.begin(); it != checkBoxes_.end(); ++it) {
+            const QString &name = it.key();
+            QCheckBox *checkBox = it.value();
+            bool value = checkBox->isChecked();
+            for (auto &fabric : booleanFabrics) {
                 if (fabric.getGroupName() != name.split("_").first().toStdString()) {
                     continue;
                 }
@@ -122,37 +150,16 @@ void SettingsWidget::applySettings()
                 auto setting = fabric.getSetting(name.split("_").last().toStdString());
                 if (setting) {
                     if (setting->get() != value) { // Check if the value has changed
-                        try {
-                            setting->set(value);
-                        } catch (const std::invalid_argument &e) {
-                            qDebug() << "Invalid value for setting" << name << ":" << e.what();
-                        }
+                        setting->set(value);
                     }
-                    break;
                 } else {
                     qDebug() << "Setting" << name.toUtf8() << "not found";
                 }
             }
         }
-    }
-
-    for (auto it = checkBoxes_.begin(); it != checkBoxes_.end(); ++it) {
-        const QString &name = it.key();
-        QCheckBox *checkBox = it.value();
-        bool value = checkBox->isChecked();
-        for (auto &fabric : booleanFabrics) {
-            if (fabric.getGroupName() != name.split("_").first().toStdString()) {
-                continue;
-            }
-
-            auto setting = fabric.getSetting(name.split("_").last().toStdString());
-            if (setting) {
-                if (setting->get() != value) { // Check if the value has changed
-                    setting->set(value);
-                }
-            } else {
-                qDebug() << "Setting" << name.toUtf8() << "not found";
-            }
-        }
+        QMessageBox::information(this, "Статус сохранения", "Настройки успешно сохранены");
+        close();
+    } catch (std::exception ex) {
+        QMessageBox::critical(this, "Статус сохранения", "Не удалось сохранить настройки");
     }
 }

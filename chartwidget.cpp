@@ -214,10 +214,12 @@ void ChartWidget::handleStopSignal()
 
 void ChartWidget::showData()
 {
+    if (mode != ChartWidget::WidgetMode::UART) {
+        clearGraphs();
+    }
+
     setMode(ChartWidget::WidgetMode::UART);
     
-    // Очищаем графики перед началом
-    clearGraphs();
 
     processor->readData([this](const QByteArray &data) {
         CommandResponse<SensorData> response(data);
@@ -371,6 +373,8 @@ void ChartWidget::setMode(WidgetMode mode) {
         ui->currentFileLabel->setText(storageManager->getReadFileName());
         rangeSlider->setVisible(true);
     }
+
+    this->mode = mode;
 }
 
 void ChartWidget::loadDataForPeriod(const QDateTime &start, const QDateTime &end) {

@@ -90,6 +90,7 @@ private:
     OrientablePushButton* separatePlotsButton_ = nullptr;
     OrientablePushButton* combinedPlotButton_ = nullptr;
     OrientablePushButton* tableViewButton_ = nullptr;
+    ChartWidget::WidgetMode mode;
 };
 
 #endif // CHARTWIDGET_H
