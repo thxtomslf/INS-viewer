@@ -9,6 +9,11 @@ DataTableWidget::DataTableWidget(QWidget *parent, const std::vector<DynamicPlotB
     , dataBuffers_(buffers)
 {
     layout_ = new QVBoxLayout(this);
+    loadingLabel_ = new QLabel("Загрузка...", this);
+    loadingLabel_->setAlignment(Qt::AlignCenter);
+    loadingLabel_->setStyleSheet("font-size: 16px; color: gray;");
+    loadingLabel_->hide();
+    
     setupTable();
 }
 
@@ -30,7 +35,19 @@ void DataTableWidget::setupTable()
     table_->horizontalHeader()->setStretchLastSection(true);
     table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     
+    layout_->addWidget(loadingLabel_);
     layout_->addWidget(table_);
+}
+
+void DataTableWidget::showLoadingIndicator(bool show)
+{
+    if (show) {
+        loadingLabel_->show();
+        table_->hide();
+    } else {
+        loadingLabel_->hide();
+        table_->show();
+    }
 }
 
 void DataTableWidget::addDataColumn(const QString &label, 
@@ -106,7 +123,8 @@ void DataTableWidget::update()
         return;
     }
 
-    // Временно отключаем обновления UI
+    // Временно отключаем обновления UI и показываем индикатор загрузки
+    showLoadingIndicator(true);
     table_->setUpdatesEnabled(false);
     updatesEnabled_ = false;
 
@@ -129,9 +147,10 @@ void DataTableWidget::update()
         QApplication::processEvents();
     }
 
-    // Включаем обновления UI
+    // Включаем обновления UI и скрываем индикатор загрузки
     table_->setUpdatesEnabled(true);
     updatesEnabled_ = true;
+    showLoadingIndicator(false);
 
     // Прокручиваем к последней строке
     if (totalRows > 0) {
@@ -182,5 +201,3 @@ void DataTableWidget::updateBuffers(const std::vector<DynamicPlotBuffer*>& newBu
     dataBuffers_ = newBuffers;
     update();
 }
-
-

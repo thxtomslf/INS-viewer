@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QVBoxLayout>
 #include <QHeaderView>
+#include <QLabel>
 #include <memory>
 #include "DynamicSetting.h"
 #include "DynamicPlotBuffer.h"
@@ -31,13 +32,15 @@ private:
     void setupTable();
     void updateTable();
     void resizeColumnsToContents();
+    void showLoadingIndicator(bool show);
 
-    int BATCH_SIZE = 100; // Размер пакета для загрузки
+    int BATCH_SIZE = 20; // Размер пакета для загрузки
     QTableWidget *table_;
     QVBoxLayout *layout_;
+    QLabel *loadingLabel_;
     std::vector<QString> columnLabels_;
     std::vector<DynamicPlotBuffer*> dataBuffers_;
     bool updatesEnabled_;
 };
 
-#endif // DATATABLEWIDGET_H 
+#endif // DATATABLEWIDGET_H

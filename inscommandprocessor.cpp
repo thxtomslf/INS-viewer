@@ -49,7 +49,7 @@ void InsCommandProcessor::interrupt()
         qDebug() << "Serial port is not open.";
         return;
     }
-    responseCallback_ = nullptr;
+    responseCallback_ = EMPTY_CALLBACK;
     Command<EmptyData> command(CommandType::Stop);
 
     QByteArray commandData = command.toByteArray();
@@ -67,7 +67,7 @@ void InsCommandProcessor::reconfigureUart(QSerialPort::BaudRate baudRate, QSeria
         qDebug() << "Serial port is not open.";
         return;
     }
-    responseCallback_ = nullptr;
+    responseCallback_ = EMPTY_CALLBACK;
 
     UartSettings uartSettings(baudRate, dataBits, parity, flowControl, stopBits);
     Command<UartSettings> command(CommandType::ReconfigureUart);
@@ -100,8 +100,6 @@ void InsCommandProcessor::handleReadyRead()
         return;
     }
 
-//    qDebug() << "Response bytes: " << incomingData;
-
     buffer_.append(incomingData);
 
     while (buffer_.size() >= 3) { // Минимальный размер для чтения заголовка
@@ -118,24 +116,22 @@ void InsCommandProcessor::handleReadyRead()
 
         // Проверяем, достаточно ли данных в буфере для полного сообщения
         if (buffer_.size() < 3 + messageLength + 1) {
-            // Если в буфере недостаточно данных для полного сообщения, выходим из цикла
             break;
         }
 
         // Если сообщение корректно, вызываем колбэк и удаляем данные из буфера
-        if (responseCallback_) {
-            responseCallback_(buffer_.pop(3 + messageLength + 1));
-            messagesCount += 1;
-
-        } else {
-            switch (responseType) {
-                case Accepted:
-                    qDebug() << "Accepted";
-                case Rejected:
-                    qDebug() << "Rejected";
-                case CRC_FAIL:
-                    qDebug() << "CRC_FAIL";
-            }
+        responseCallback_(buffer_.pop(3 + messageLength + 1));
+        messagesCount += 1;
+        switch (responseType) {
+        case Accepted:
+            qDebug() << "Accepted";
+            break;
+        case Rejected:
+            qDebug() << "Rejected";
+            break;
+        case CRC_FAIL:
+            qDebug() << "CRC_FAIL";
+            break;
         }
     }
 }

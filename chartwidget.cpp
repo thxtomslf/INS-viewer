@@ -108,25 +108,25 @@ void ChartWidget::initCharts(std::shared_ptr<DynamicSetting<int>> plotBufferSize
     envGroup_ = new DynamicPlotsGroup(this);
     envGroup_->addPlot("Температура, °C", plotBufferSize, plotSize);
     envGroup_->addPlot("Влажность, %", plotBufferSize, plotSize);
-    envGroup_->addPlot("Давление, Па", plotBufferSize, plotSize);
+    envGroup_->addPlot("Давление, кПа", plotBufferSize, plotSize);
     ui->verticalLayoutEnv_2->addWidget(envGroup_);
 
     acceleroGroup_ = new DynamicPlotsGroup(this);
-    acceleroGroup_->addPlot("Линейное ускорение X, м/c^2", plotBufferSize, plotSize);
-    acceleroGroup_->addPlot("Линейное ускорение Y, м/c^2", plotBufferSize, plotSize);
-    acceleroGroup_->addPlot("Линейное ускорение Z, м/c^2", plotBufferSize, plotSize);
+    acceleroGroup_->addPlot("Линейное ускорение X, mg", plotBufferSize, plotSize);
+    acceleroGroup_->addPlot("Линейное ускорение Y, mg", plotBufferSize, plotSize);
+    acceleroGroup_->addPlot("Линейное ускорение Z, mg", plotBufferSize, plotSize);
     ui->verticalLayoutAccelero_2->addWidget(acceleroGroup_);
 
     gyroGroup_ = new DynamicPlotsGroup(this);
-    gyroGroup_->addPlot("Угловая скорость X, рад/c", plotBufferSize, plotSize);
-    gyroGroup_->addPlot("Угловая скорость Y, рад/c", plotBufferSize, plotSize);
-    gyroGroup_->addPlot("Угловая скорость Z, рад/c", plotBufferSize, plotSize);
+    gyroGroup_->addPlot("Угловая скорость X, град/c", plotBufferSize, plotSize);
+    gyroGroup_->addPlot("Угловая скорость Y, град/c", plotBufferSize, plotSize);
+    gyroGroup_->addPlot("Угловая скорость Z, град/c", plotBufferSize, plotSize);
     ui->verticalLayoutGyro_2->addWidget(gyroGroup_);
 
     magnetoGroup_ = new DynamicPlotsGroup(this);
-    magnetoGroup_->addPlot("Магнитная индукция X, Гc", plotBufferSize, plotSize);
-    magnetoGroup_->addPlot("Магнитная индукция Y, Гc", plotBufferSize, plotSize);
-    magnetoGroup_->addPlot("Магнитная индукция Z, Гc", plotBufferSize, plotSize);
+    magnetoGroup_->addPlot("Магнитная индукция X, мГc", plotBufferSize, plotSize);
+    magnetoGroup_->addPlot("Магнитная индукция Y, мГc", plotBufferSize, plotSize);
+    magnetoGroup_->addPlot("Магнитная индукция Z, мГc", plotBufferSize, plotSize);
     ui->verticalLayoutMagneto_2->addWidget(magnetoGroup_);
 }
 

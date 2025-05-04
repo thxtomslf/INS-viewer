@@ -50,6 +50,7 @@ private slots:
     void updateCounter();
 
 private:
+    std::function<void(const QByteArray&)> EMPTY_CALLBACK = [this](const QByteArray &data) {};
     QString responseTypeToString(ResponseType type) const;
     bool validateCRC(const QByteArray &message, uint8_t crc) const;
 

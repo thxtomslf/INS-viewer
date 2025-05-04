@@ -50,7 +50,7 @@ public:
         for (int i = 0; i < 3; ++i) {
             int16_t measure;
             std::memcpy(&measure, data.constData() + index, sizeof(int16_t));
-            gyroMeasures_.append(measure);
+            gyroMeasures_.append(measure * GYRO_MULTIPLIER);
             index += sizeof(int16_t);
         }
 
@@ -115,6 +115,7 @@ public:
     }
 
 private:
+    float GYRO_MULTIPLIER = 0.001;
     QList<float> envMeasures_;
     QList<int16_t> gyroMeasures_;
     QList<int16_t> acceleroMeasures_;
