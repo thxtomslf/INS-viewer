@@ -172,7 +172,12 @@ void UartWidget::onPageShow(Page page) {
 void UartWidget::reconfigureUart() {
     prepareUartParams();
     serialReaderWriter->reconfigureUart(baudRate, dataBits, parity, flowControl, stopBits);
-    PageRouter::instance().navigateTo(Page::Graphics);
+    // PageRouter::instance().navigateTo(Page::Graphics);
+
+
+    QMessageBox::information(this, "Статус операции", "Настройки успешно сохранены");
+
+    serialReaderWriter->setSpeed(baudRate);
 }
 
 void UartWidget::onConnectButtonClicked() {

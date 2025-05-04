@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QException>
 #include <QMessageBox>
+#include <qthread.h>
 #include <comand/EmtyData.h>
 
 InsCommandProcessor::InsCommandProcessor(QObject *parent)
@@ -82,11 +83,6 @@ void InsCommandProcessor::reconfigureUart(QSerialPort::BaudRate baudRate, QSeria
     }
 
     emit stopped();
-
-    // Закрываем и открываем порт с новыми настройками
-    QString currentPortName = getPortName();
-    closeSerialPort();
-    openSerialPort(currentPortName, baudRate, dataBits, parity, stopBits, flowControl);
 }
 
 void InsCommandProcessor::updateCounter() {
@@ -96,6 +92,10 @@ void InsCommandProcessor::updateCounter() {
 
 int InsCommandProcessor::getFrequency() {
     return frequency;
+}
+
+void InsCommandProcessor::setSpeed(QSerialPort::BaudRate baudRate) {
+    serialPort->setBaudRate(baudRate);
 }
 
 void InsCommandProcessor::handleReadyRead()

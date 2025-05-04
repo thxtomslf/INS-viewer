@@ -92,7 +92,7 @@ void ChartWidget::initStartToggleButton() {
     connect(ui->startToggleButton, &ToggleButton::startSignal, this, &ChartWidget::showData);
     connect(ui->startToggleButton, &ToggleButton::pauseSignal, this, &ChartWidget::stopShowData);
     connect(ui->startToggleButton, &ToggleButton::stopSignal, this, &ChartWidget::handleStopSignal);
-    connect(processor, &InsCommandProcessor::stopped, ui->startToggleButton, &ToggleButton::onPauseClicked);
+    // connect(processor, &InsCommandProcessor::stopped, ui->startToggleButton, &ToggleButton::onPauseClicked);
     ui->startToggleButton->setVisible(false);
 }
 

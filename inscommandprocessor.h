@@ -37,6 +37,7 @@ public:
     void interrupt();
     void reconfigureUart(QSerialPort::BaudRate baudRate, QSerialPort::DataBits dataBits, QSerialPort::Parity parity, QSerialPort::FlowControl flowControl, QSerialPort::StopBits stopBits);
 
+    void setSpeed(QSerialPort::BaudRate baudRate);
 
 public:
     int getFrequency();
