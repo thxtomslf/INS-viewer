@@ -82,6 +82,11 @@ void InsCommandProcessor::reconfigureUart(QSerialPort::BaudRate baudRate, QSeria
     }
 
     emit stopped();
+
+    // Закрываем и открываем порт с новыми настройками
+    QString currentPortName = getPortName();
+    closeSerialPort();
+    openSerialPort(currentPortName, baudRate, dataBits, parity, stopBits, flowControl);
 }
 
 void InsCommandProcessor::updateCounter() {

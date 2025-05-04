@@ -21,9 +21,11 @@ public:
 
     virtual void closeSerialPort();
     QString getLastError() const;
+    QString getPortName() const { return portName_; }
 
 protected:
     QSerialPort *serialPort;
+    QString portName_;
 
 private:
     QString lastError;

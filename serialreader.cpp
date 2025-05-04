@@ -22,6 +22,7 @@ bool SerialReaderWriter::openSerialPort(const QString &portName,
                                         QSerialPort::StopBits stopBits,
                                         QSerialPort::FlowControl flowControl)
 {
+    portName_ = portName;
     serialPort->setPortName(portName);
     serialPort->setBaudRate(baudRate);
     serialPort->setDataBits(dataBits);
