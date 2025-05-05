@@ -7,6 +7,7 @@
 #include <vector>
 #include <functional>
 #include <qtimer.h>
+#include <QThread>
 
 #include "dynamiccircularbuffer.h"
 #include "serialreader.h"
@@ -45,17 +46,19 @@ public:
 signals:
     void connectionStatusChanged(bool connected);
     void stopped();
+    void dataReceived(const QByteArray& data);
 
 private slots:
-    void handleReadyRead();
     void updateCounter();
+    void handleDataReceived(const QByteArray& data);
 
 private:
-    std::function<void(const QByteArray&)> EMPTY_CALLBACK = [this](const QByteArray &data) {};
+    void readThreadFunction();
     QString responseTypeToString(ResponseType type) const;
     bool validateCRC(const QByteArray &message, uint8_t crc) const;
 
     const int BUFFER_SIZE = 2048 * 10;
+    std::function<void(const QByteArray&)> EMPTY_CALLBACK = [this](const QByteArray &data) {};
     std::function<void(const QByteArray&)> responseCallback_;
     DynamicCircularBuffer buffer_;
     int tail;
@@ -67,7 +70,8 @@ private:
     int messagesCount = 0;
     int frequency = 0;
     QTimer timer;
+    QThread* readThread;
+    bool shouldStopReading;
 };
-
 
 #endif // INSCOMMANDPROCESSOR_H

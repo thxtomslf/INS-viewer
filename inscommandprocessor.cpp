@@ -11,18 +11,30 @@ InsCommandProcessor::InsCommandProcessor(QObject *parent)
     : SerialReaderWriter(parent),
       tail(0),
       head(0),
-      buffer_(BUFFER_SIZE)
+      buffer_(BUFFER_SIZE),
+      readThread(new QThread(this)),
+      shouldStopReading(false)
 {
-    connect(serialPort, &QSerialPort::readyRead, this, &InsCommandProcessor::handleReadyRead);
-
     timer.setInterval(1000);
     connect(&timer, &QTimer::timeout, this, &InsCommandProcessor::updateCounter);
+    connect(this, &InsCommandProcessor::dataReceived, this, &InsCommandProcessor::handleDataReceived);
     timer.start();
+
+    // Setup and start read thread
+    connect(readThread, &QThread::started, this, [this]() {
+        readThreadFunction();
+    });
+    readThread->start();
 }
 
 InsCommandProcessor::~InsCommandProcessor()
 {
-
+    shouldStopReading = true;
+    if (readThread) {
+        readThread->quit();
+        readThread->wait();
+        delete readThread;
+    }
 }
 
 void InsCommandProcessor::readData(const std::function<void(const QByteArray&)> &callback)
@@ -44,63 +56,20 @@ void InsCommandProcessor::readData(const std::function<void(const QByteArray&)> 
     }
 }
 
-void InsCommandProcessor::interrupt()
+void InsCommandProcessor::readThreadFunction()
 {
-    if (!serialPort->isOpen()) {
-        qDebug() << "Serial port is not open.";
-        return;
-    }
-    responseCallback_ = EMPTY_CALLBACK;
-    Command<EmptyData> command(CommandType::Stop);
-
-    QByteArray commandData = command.toByteArray();
-    qDebug() << "Stop command data: " << commandData;
-    int writtenBytes = serialPort->write(commandData);
-    if (writtenBytes < commandData.size()) {
-        qDebug() << "Failed to send full command";
-        throw new QException();
+    while (!shouldStopReading && serialPort->isOpen()) {
+        if (serialPort->waitForReadyRead(100)) {
+            QByteArray incomingData = serialPort->read(BUFFER_SIZE / 10);
+            if (!incomingData.isEmpty()) {
+                emit dataReceived(incomingData);
+            }
+        }
     }
 }
 
-void InsCommandProcessor::reconfigureUart(QSerialPort::BaudRate baudRate, QSerialPort::DataBits dataBits, QSerialPort::Parity parity, QSerialPort::FlowControl flowControl, QSerialPort::StopBits stopBits)
+void InsCommandProcessor::handleDataReceived(const QByteArray& incomingData)
 {
-    if (!serialPort->isOpen()) {
-        qDebug() << "Serial port is not open.";
-        return;
-    }
-    responseCallback_ = EMPTY_CALLBACK;
-
-    UartSettings uartSettings(baudRate, dataBits, parity, flowControl, stopBits);
-    Command<UartSettings> command(CommandType::ReconfigureUart);
-    command.setBody(uartSettings);
-
-    QByteArray commandData = command.toByteArray();
-    qDebug() << "Reconfigure UART command data: " << commandData;
-    int writtenBytes = serialPort->write(commandData);
-    if (writtenBytes < commandData.size()) {
-        qDebug() << "Failed to send full command";
-        throw new QException();
-    }
-
-    emit stopped();
-}
-
-void InsCommandProcessor::updateCounter() {
-    frequency = messagesCount;
-    messagesCount = 0;
-}
-
-int InsCommandProcessor::getFrequency() {
-    return frequency;
-}
-
-void InsCommandProcessor::setSpeed(QSerialPort::BaudRate baudRate) {
-    serialPort->setBaudRate(baudRate);
-}
-
-void InsCommandProcessor::handleReadyRead()
-{
-    QByteArray incomingData = serialPort->read(BUFFER_SIZE / 10);
     if (!responseCallback_) {
         return;
     }
@@ -139,6 +108,68 @@ void InsCommandProcessor::handleReadyRead()
             break;
         }
     }
+}
+
+void InsCommandProcessor::interrupt()
+{
+    if (!serialPort->isOpen()) {
+        qDebug() << "Serial port is not open.";
+        return;
+    }
+    responseCallback_ = EMPTY_CALLBACK;
+    Command<EmptyData> command(CommandType::Stop);
+
+    QByteArray commandData = command.toByteArray();
+    qDebug() << "Stop command data: " << commandData;
+    int writtenBytes = serialPort->write(commandData);
+    if (writtenBytes < commandData.size()) {
+        qDebug() << "Failed to send full command";
+        throw new QException();
+    }
+
+    shouldStopReading = true;
+    if (readThread) {
+        readThread->quit();
+        readThread->wait();
+        delete readThread;
+        readThread = nullptr;
+    }
+}
+
+void InsCommandProcessor::reconfigureUart(QSerialPort::BaudRate baudRate, QSerialPort::DataBits dataBits, QSerialPort::Parity parity, QSerialPort::FlowControl flowControl, QSerialPort::StopBits stopBits)
+{
+    if (!serialPort->isOpen()) {
+        qDebug() << "Serial port is not open.";
+        return;
+    }
+    responseCallback_ = EMPTY_CALLBACK;
+
+    UartSettings uartSettings(baudRate, dataBits, parity, flowControl, stopBits);
+    Command<UartSettings> command(CommandType::ReconfigureUart);
+    command.setBody(uartSettings);
+
+    QByteArray commandData = command.toByteArray();
+    qDebug() << "Reconfigure UART command data: " << commandData;
+    int writtenBytes = serialPort->write(commandData);
+    if (writtenBytes < commandData.size()) {
+        qDebug() << "Failed to send full command";
+        throw new QException();
+    }
+
+    emit stopped();
+}
+
+void InsCommandProcessor::updateCounter() {
+    frequency = messagesCount;
+    messagesCount = 0;
+}
+
+int InsCommandProcessor::getFrequency() {
+    return frequency;
+}
+
+void InsCommandProcessor::setSpeed(QSerialPort::BaudRate baudRate) {
+    serialPort->setBaudRate(baudRate);
 }
 
 QString InsCommandProcessor::responseTypeToString(ResponseType type) const
